@@ -1,0 +1,18 @@
+{
+  "name": "Coral",
+  "version": "0.1.0",
+  "meta": {
+    "author_name": "Coral",
+    "author_email": "dev@example.com",
+    "author_support_url": "https://example.com/support"
+  },
+  "variations": [
+    {
+      "name": "Default",
+      "id": "default",
+      "meta": {
+        "description": "Default"
+      }
+    }
+  ]
+}
