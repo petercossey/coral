@@ -19,6 +19,7 @@
             </a>
         </section>
     </main>
+    {{!-- #TODO: If more pages repeat these script tags, move window.Coral context setup and the app.js tag into a shared boot partial so error pages keep the same JS contract as normal pages. --}}
     <script nonce="{{nonce}}" type="module" src="{{cdn 'assets/dist/app.js'}}"></script>
     {{{footer.scripts}}}
 </body>

@@ -6,6 +6,10 @@ export default defineConfig({
   root: import.meta.dirname,
   plugins: [tailwindcss()],
   publicDir: false,
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'preact',
+  },
   build: {
     emptyOutDir: true,
     lib: {

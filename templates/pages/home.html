@@ -1,15 +1,69 @@
+---
+products:
+    featured:
+        limit: 8
+cart: true
+---
+{{inject "coralProductCarouselProducts" products.featured}}
 <!doctype html>
 <html lang="{{ locale_name }}">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{head.title}}</title>
     <link rel="stylesheet" href="{{cdn 'assets/dist/style.css'}}">
     {{{head.scripts}}}
 </head>
-<body class="min-h-screen bg-white text-slate-950 antialiased">
-    <main class="mx-auto flex min-h-screen max-w-5xl items-center px-6">
-        <h1 class="text-3xl font-semibold">Coral</h1>
+<body class="min-h-screen bg-slate-50 text-slate-950 antialiased">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+            <a href="{{urls.home}}" class="text-lg font-semibold text-slate-950">Coral</a>
+            {{> components/header/cart-link urls=urls cart=cart}}
+        </div>
+    </header>
+
+    <main class="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-10">
+        <section class="max-w-2xl">
+            <h1 class="text-3xl font-semibold tracking-normal text-slate-950">Minimal Stencil starter</h1>
+            <p class="mt-3 text-base leading-7 text-slate-600">
+                A server-rendered BigCommerce theme foundation with small client components where interaction needs them.
+            </p>
+            {{> components/counter/counter initial_count=0}}
+        </section>
+
+        {{> components/product-carousel/product-carousel context_key="coralProductCarouselProducts" title="Featured products"}}
     </main>
+
+    {{> components/cart-drawer/cart-drawer cart_url=urls.cart}}
+
+    <script nonce="{{nonce}}">
+        window.Coral = window.Coral || {};
+        window.Coral.pageType = '{{page_type}}';
+        window.Coral.context = JSON.parse({{jsContext}});
+
+        if (!Array.isArray(window.Coral.context.coralProductCarouselProducts) || window.Coral.context.coralProductCarouselProducts.length === 0) {
+            window.Coral.context.coralProductCarouselProducts = [
+                {
+                    id: 86,
+                    name: '[Sample] Able Brewing System',
+                    url: 'https://coral-demo.mybigcommerce.com/able-brewing-system',
+                    image: 'https://cdn11.bigcommerce.com/s-nrkvzedsmn/products/86/images/286/ablebrewingsystem4.1780656155.220.290.jpg?c=1',
+                    price: {
+                        formatted: 'A$225.00',
+                    },
+                },
+                {
+                    id: 103,
+                    name: '[Sample] Canvas Laundry Cart',
+                    url: 'https://coral-demo.mybigcommerce.com/canvas-laundry-cart/',
+                    image: 'https://cdn11.bigcommerce.com/s-nrkvzedsmn/products/103/images/334/naturalcanvascart2.1780656155.220.290.jpg?c=1',
+                    price: {
+                        formatted: 'A$200.00',
+                    },
+                },
+            ];
+        }
+    </script>
     <script nonce="{{nonce}}" type="module" src="{{cdn 'assets/dist/app.js'}}"></script>
     {{{footer.scripts}}}
 </body>

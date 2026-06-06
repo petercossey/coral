@@ -11,8 +11,9 @@ Stencil is BigCommerce's native storefront theme framework. Themes are primarily
 - Keep the starter theme minimal, contemporary, and easy to reason about.
 - Prefer server-rendered Handlebars as the baseline.
 - Add JavaScript only when an interaction needs it.
-- When interactive widgets are introduced, prefer progressive enhancement with small Preact islands.
-- Do not import Cornerstone's Sass architecture, JS PageManager framework, Grunt setup, or broad JavaScript conventions unless a specific need is proven.
+- When interactive widgets are introduced, prefer small Preact client components at isolated leaves.
+- Use plain theme setup modules for JavaScript that enhances server-rendered DOM.
+- Do not import Cornerstone's Sass architecture, JS PageManager framework, Grunt setup, or broad JavaScript conventions unless a specific need is proven. Coral may borrow the simple idea of global/page setup by Stencil `page_type`, but not the PageManager class pattern by default.
 - Avoid broad folder structures until repeated real use justifies them.
 
 ## Asset Pipeline
@@ -21,6 +22,10 @@ Stencil is BigCommerce's native storefront theme framework. Themes are primarily
 - Use Vite for JavaScript and CSS builds.
 - Use Tailwind CSS through `@tailwindcss/vite`; do not add PostCSS unless another transform requires it.
 - Source CSS from `assets/css/style.css` and source JavaScript from `assets/js/app.js`.
+- `assets/js/app.js` is the small boot entry that starts Preact client components and server-rendered theme setup.
+- `assets/js/context.js` is a read-only adapter for `window.Coral`; keep theme behavior in `assets/js/theme/` and mutable state in `assets/js/state/`.
+- Preact client component code may be co-located with its Handlebars partial under `templates/components/<name>/` while the component shape is still small and explicit.
+- JavaScript for server-rendered markup lives under `assets/js/theme/<area>/` as plain setup functions.
 - Build output goes to ignored `assets/dist/` as `style.css` and `app.js`.
 - Reference built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`.
 - Bypass Stencil's built-in Sass pipeline; do not use `{{stylesheet}}` for Coral's main CSS unless we intentionally adopt Stencil Theme Editor stylesheet rewriting later.
@@ -66,4 +71,5 @@ Do not leave long-running `stencil start` sessions active after validation unles
 - Use `{{inject}}` / `{{jsContext}}` only when client-side code genuinely needs server-rendered context.
 - Include Stencil-expected page templates as they become relevant, starting with `templates/pages/home.html` and `templates/pages/errors/404.html`.
 - Storefront API work should be checked against the local developer docs before implementation.
-- Keep the no-JavaScript experience functional wherever practical; Preact islands should enhance existing markup, not replace the whole page.
+- No-JavaScript fallbacks are optional for client components; do not replace whole pages with Preact.
+- Theme modules should preserve server-rendered fallbacks where practical.
