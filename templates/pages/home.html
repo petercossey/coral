@@ -5,6 +5,6 @@ products:
 cart: true
 ---
 {{#partial "page"}}
-    <p>hello world</p>
+    {{> components/featured-products/featured-products products=products.featured}}
 {{/partial}}
 {{> layout/base}}

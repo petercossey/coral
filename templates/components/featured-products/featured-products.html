@@ -1,0 +1,77 @@
+{{#if products}}
+<section class="flex flex-col gap-6" aria-labelledby="featured-products-heading">
+    <div>
+        <h1 class="text-3xl font-semibold" id="featured-products-heading">Featured products</h1>
+    </div>
+
+    <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {{#each products}}
+            <li class="border border-slate-300 bg-white">
+                <article class="flex h-full flex-col" data-product-id="{{id}}">
+                    <a class="block border-b border-slate-300" href="{{url}}" aria-label="View {{name}}" data-event-type="product-click" data-product-id="{{id}}">
+                        {{#if image}}
+                            <img
+                                class="aspect-square w-full object-cover"
+                                src="{{getImageSrcset image 1x='640w'}}"
+                                srcset="{{getImageSrcset image use_default_sizes=true}}"
+                                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                                alt="{{image.alt}}"
+                                loading="lazy">
+                        {{else}}
+                            <div class="flex aspect-square items-center justify-center px-6 text-center text-sm">
+                                Image unavailable
+                            </div>
+                        {{/if}}
+                    </a>
+
+                    <div class="flex flex-1 flex-col gap-4 p-5">
+                        <div class="flex flex-col gap-2">
+                            {{#if brand.name}}
+                                <p class="text-sm">{{brand.name}}</p>
+                            {{/if}}
+
+                            <h2 class="text-lg font-semibold leading-snug">
+                                <a href="{{url}}">{{name}}</a>
+                            </h2>
+
+                            {{#if summary}}
+                                <p class="line-clamp-3 text-sm leading-6">{{summary}}</p>
+                            {{/if}}
+                        </div>
+
+                        <div class="mt-auto flex items-center justify-between gap-4">
+                            <div class="text-base font-semibold">
+                                {{#if price.with_tax}}
+                                    {{price.with_tax.formatted}}
+                                {{else}}
+                                    {{#if price.without_tax}}
+                                        {{price.without_tax.formatted}}
+                                    {{/if}}
+                                {{/if}}
+                            </div>
+
+                            {{#if show_cart_action}}
+                                {{#if has_options}}
+                                    <a class="inline-flex shrink-0 items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium" href="{{url}}" data-event-type="product-click" data-product-id="{{id}}">
+                                        Choose options
+                                    </a>
+                                {{else if pre_order_add_to_cart_url}}
+                                    <a class="inline-flex shrink-0 items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium" href="{{pre_order_add_to_cart_url}}" data-event-type="product-click" data-button-type="add-cart" data-product-id="{{id}}">
+                                        Pre-order
+                                    </a>
+                                {{else}}
+                                    {{#if add_to_cart_url}}
+                                        <a class="inline-flex shrink-0 items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium" href="{{add_to_cart_url}}" data-event-type="product-click" data-button-type="add-cart" data-product-id="{{id}}">
+                                            {{#if pre_order}}Pre-order{{else}}Add to cart{{/if}}
+                                        </a>
+                                    {{/if}}
+                                {{/if}}
+                            {{/if}}
+                        </div>
+                    </div>
+                </article>
+            </li>
+        {{/each}}
+    </ul>
+</section>
+{{/if}}

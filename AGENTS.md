@@ -9,6 +9,8 @@ Stencil is BigCommerce's theme engine for building hosted storefronts. Themes ar
 ## Direction
 
 - Keep the starter theme minimal, contemporary, and easy to reason about.
+- Use Tailwind utilities in a bare-bones starter-kit style: prefer layout, spacing, type, borders, and simple responsive behavior over branded visual polish.
+- Avoid decorative gradients, heavy shadows, hover motion, transitions, animation, and highly opinionated color treatments unless a specific component genuinely needs them.
 - Prefer server-rendered Handlebars as the baseline and add JavaScript only when an interaction needs it.
 - When interactive widgets are introduced, prefer small Preact client components at isolated leaves.
 - Use plain theme setup modules for JavaScript that enhances server-rendered DOM.
