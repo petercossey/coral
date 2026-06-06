@@ -4,7 +4,6 @@ products:
         limit: 8
 cart: true
 ---
-{{inject "coralProductCarouselProducts" products.featured}}
 <!doctype html>
 <html lang="{{ locale_name }}">
 <head>
@@ -23,15 +22,7 @@ cart: true
     </header>
 
     <main class="mx-auto flex max-w-6xl flex-col gap-12 px-6 py-10">
-        <section class="max-w-2xl">
-            <h1 class="text-3xl font-semibold tracking-normal text-slate-950">Minimal Stencil starter</h1>
-            <p class="mt-3 text-base leading-7 text-slate-600">
-                A server-rendered BigCommerce theme foundation with small client components where interaction needs them.
-            </p>
-            {{> components/counter/counter initial_count=0}}
-        </section>
-
-        {{> components/product-carousel/product-carousel context_key="coralProductCarouselProducts" title="Featured products"}}
+      <p>hello world</p>
     </main>
 
     {{> components/cart-drawer/cart-drawer cart_url=urls.cart}}

@@ -4,5 +4,4 @@
 export const componentRegistry = {
   'cart-drawer': () => import('../../../templates/components/cart-drawer/cart-drawer.client.jsx'),
   counter: () => import('../../../templates/components/counter/counter.client.jsx'),
-  'product-carousel': () => import('../../../templates/components/product-carousel/product-carousel.client.jsx'),
 };
