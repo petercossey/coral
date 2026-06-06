@@ -1,0 +1,8 @@
+<header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <a href="{{urls.home}}" class="text-lg font-semibold text-slate-950">
+            {{#if settings.store_logo.title}}{{settings.store_logo.title}}{{else}}Coral{{/if}}
+        </a>
+        {{> components/header/cart-link urls=urls cart=cart}}
+    </div>
+</header>

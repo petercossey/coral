@@ -1,26 +1,13 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>{{head.title}}</title>
-    <link rel="stylesheet" href="{{cdn 'assets/dist/style.css'}}">
-    {{{head.scripts}}}
-</head>
-<body class="min-h-screen bg-white text-slate-950 antialiased">
-    <main class="mx-auto flex min-h-screen max-w-5xl items-center px-6">
-        <section>
-            <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">404</p>
-            <h1 class="mt-3 text-3xl font-semibold">Page not found</h1>
-            <p class="mt-4 max-w-xl text-base text-slate-600">
-                The page you were looking for does not exist or has moved.
-            </p>
-            <a class="mt-8 inline-flex text-sm font-semibold text-slate-950 underline" href="{{urls.home}}">
-                Return home
-            </a>
-        </section>
-    </main>
-    {{!-- #TODO: If more pages repeat these script tags, move window.Coral context setup and the app.js tag into a shared boot partial so error pages keep the same JS contract as normal pages. --}}
-    <script nonce="{{nonce}}" type="module" src="{{cdn 'assets/dist/app.js'}}"></script>
-    {{{footer.scripts}}}
-</body>
-</html>
+{{#partial "page"}}
+    <section class="py-24">
+        <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">404</p>
+        <h1 class="mt-3 text-3xl font-semibold">Page not found</h1>
+        <p class="mt-4 max-w-xl text-base text-slate-600">
+            The page you were looking for does not exist or has moved.
+        </p>
+        <a class="mt-8 inline-flex text-sm font-semibold text-slate-950 underline" href="{{urls.home}}">
+            Return home
+        </a>
+    </section>
+{{/partial}}
+{{> layout/base}}

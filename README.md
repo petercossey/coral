@@ -51,14 +51,19 @@ assets/
   dist/                     Ignored Vite build output
 
 templates/
+  layout/                   Base document layouts
+  common/                   Shared structural regions for layout shells
   pages/                    Server-rendered Stencil pages
-  components/               Handlebars partials and small co-located clients
+  components/
+    <name>/                 Feature partials and small co-located clients
 
 docs/
   javascript.md             Client component and theme module conventions
 ```
 
 The storefront references built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`. Do not use Stencil's `{{stylesheet}}` helper for Coral's main CSS.
+
+Page templates define a `page` block and then render either `{{> layout/base}}` for normal storefront chrome or `{{> layout/empty}}` for chrome-free system pages such as checkout. Shared structural regions such as the site header, body wrapper, and footer live in `templates/common/`; `templates/components/` is reserved for feature-specific partials and co-located client components.
 
 ## Commands
 

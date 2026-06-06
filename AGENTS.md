@@ -48,6 +48,14 @@ Use the globally installed `stencil` command for local validation. Do not run th
 - Keep generated or bundled artifacts out of source unless the project intentionally adopts them.
 - Update this file when validation rules or architecture decisions become real project conventions.
 
+## Template Layout
+
+- Page templates define a `page` block and then render `{{> layout/base}}` or `{{> layout/empty}}`.
+- Use `templates/layout/base.html` for normal storefront pages with the document shell, Coral assets, cart drawer mount, and shared structural partials.
+- Use `templates/layout/empty.html` for chrome-free system pages such as checkout; add only the checkout-specific head/content that page needs.
+- Keep shared structural regions such as header, body, and footer under `templates/common/`.
+- Keep `templates/components/` for feature-specific partials and small co-located client components, not broad layout structure.
+
 ## Validation
 
 For each meaningful theme change, verify as much of this as is practical:

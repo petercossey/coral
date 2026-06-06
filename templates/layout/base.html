@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="{{locale_name}}">
+    <head>
+        <meta charset="utf-8">
+        <title>{{head.title}}</title>
+        {{{resourceHints}}}
+        {{{head.meta_tags}}}
+        {{{head.config}}}
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {{#if head.favicon}}
+            <link rel="shortcut icon" href="{{{head.favicon}}}">
+        {{/if}}
+        {{#block "head"}}{{/block}}
+        <link rel="stylesheet" href="{{cdn 'assets/dist/style.css'}}">
+        {{{head.scripts}}}
+    </head>
+    <body class="min-h-screen bg-slate-50 text-slate-950 antialiased">
+        {{> common/header urls=urls cart=cart}}
+        {{> common/body}}
+        {{> common/footer}}
+        {{> components/cart-drawer/cart-drawer cart_url=urls.cart}}
+        <script nonce="{{nonce}}">
+        window.Coral = window.Coral || {};
+        window.Coral.pageType = '{{page_type}}';
+        window.Coral.context = JSON.parse({{jsContext}});
+        </script>
+    <script nonce="{{nonce}}" type="module" src="{{cdn 'assets/dist/app.js'}}"></script>
+    {{{footer.scripts}}}
+    </body>
+</html>
