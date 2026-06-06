@@ -4,16 +4,14 @@
 
 Coral is a lightweight starter framework for BigCommerce Stencil themes. Build it from a mostly blank structure in small, deliberate steps.
 
-Stencil is BigCommerce's native storefront theme framework. Themes are primarily Handlebars templates, packaged and validated by Stencil CLI.
+Stencil is BigCommerce's theme engine for building hosted storefronts. Themes are primarily Handlebars templates, packaged and validated by Stencil CLI.
 
 ## Direction
 
 - Keep the starter theme minimal, contemporary, and easy to reason about.
-- Prefer server-rendered Handlebars as the baseline.
-- Add JavaScript only when an interaction needs it.
+- Prefer server-rendered Handlebars as the baseline and add JavaScript only when an interaction needs it.
 - When interactive widgets are introduced, prefer small Preact client components at isolated leaves.
 - Use plain theme setup modules for JavaScript that enhances server-rendered DOM.
-- Do not import Cornerstone's Sass architecture, JS PageManager framework, Grunt setup, or broad JavaScript conventions unless a specific need is proven. Coral may borrow the simple idea of global/page setup by Stencil `page_type`, but not the PageManager class pattern by default.
 - Avoid broad folder structures until repeated real use justifies them.
 
 ## Asset Pipeline
@@ -28,7 +26,7 @@ Stencil is BigCommerce's native storefront theme framework. Themes are primarily
 - JavaScript for server-rendered markup lives under `assets/js/theme/<area>/` as plain setup functions.
 - Build output goes to ignored `assets/dist/` as `style.css` and `app.js`.
 - Reference built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`.
-- Bypass Stencil's built-in Sass pipeline; do not use `{{stylesheet}}` for Coral's main CSS unless we intentionally adopt Stencil Theme Editor stylesheet rewriting later.
+- Bypass Stencil's built-in Sass pipeline; do not use `{{stylesheet}}` for Coral's main CSS.
 - Do not run Vite as the storefront server. `stencil start` owns storefront rendering; Vite runs only as an asset watcher through `stencil.conf.cjs`.
 
 ## Local References
@@ -46,7 +44,6 @@ Use the globally installed `stencil` command for local validation. Do not run th
 - Make the smallest useful change that advances the starter kit.
 - Preserve a clean, understandable theme structure over matching Cornerstone.
 - Keep templates and data flow explicit.
-- Introduce abstractions only after repeated real use.
 - Prefer native browser APIs and platform features before adding client-side packages.
 - Keep generated or bundled artifacts out of source unless the project intentionally adopts them.
 - Update this file when validation rules or architecture decisions become real project conventions.
@@ -69,7 +66,6 @@ Do not leave long-running `stencil start` sessions active after validation unles
 - Theme configuration lives in `config.json`.
 - Template context is exposed through Stencil Handlebars objects and helpers.
 - Use `{{inject}}` / `{{jsContext}}` only when client-side code genuinely needs server-rendered context.
-- Include Stencil-expected page templates as they become relevant, starting with `templates/pages/home.html` and `templates/pages/errors/404.html`.
 - Storefront API work should be checked against the local developer docs before implementation.
 - No-JavaScript fallbacks are optional for client components; do not replace whole pages with Preact.
 - Theme modules should preserve server-rendered fallbacks where practical.
