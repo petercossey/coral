@@ -9,18 +9,28 @@ const componentSelector = '[data-coral-component]';
 // When removing dynamic HTML, call unmountComponents() first so component
 // effects and custom mount cleanup functions can run.
 const mountedRoots = new WeakMap();
+const scheduledRoots = new WeakMap();
 
 /**
  * @typedef {Object} MountContext
  * @property {string} name
  * @property {ParentNode} root
+ * @property {string} [pageType]
+ * @property {Record<string, unknown>} [context]
  */
 
 /**
  * @typedef {Object} ComponentDefinition
  * @property {import('preact').ComponentType<any>} [component]
- * @property {(element: Element) => Record<string, unknown>} [props]
+ * @property {(element: Element, context: MountContext) => Record<string, unknown>} [props]
  * @property {(element: Element, context: MountContext) => void | (() => void)} [mount]
+ */
+
+/**
+ * @typedef {Object} MountOptions
+ * @property {ParentNode} [root]
+ * @property {string} [pageType]
+ * @property {Record<string, unknown>} [context]
  */
 
 function warn(message, detail = undefined) {
@@ -94,7 +104,7 @@ function mountRoot(element, definition, context) {
     return;
   }
 
-  const props = typeof definition.props === 'function' ? definition.props(element) : {};
+  const props = typeof definition.props === 'function' ? definition.props(element, context) : {};
 
   render(h(definition.component, props), element);
   mountedRoots.set(element, {
@@ -104,10 +114,108 @@ function mountRoot(element, definition, context) {
   });
 }
 
-export function bootComponents(registry, root = document) {
+function getLoadMode(element) {
+  const loadMode = element.dataset.coralLoad || 'immediate';
+
+  if (loadMode === 'immediate' || loadMode === 'idle' || loadMode === 'visible') {
+    return loadMode;
+  }
+
+  warn(`Unknown Coral component load mode: ${loadMode}`, element);
+
+  return 'immediate';
+}
+
+function scheduleIdle(callback) {
+  if (typeof window.requestIdleCallback === 'function') {
+    const idleId = window.requestIdleCallback(callback);
+
+    return () => {
+      if (typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleId);
+      }
+    };
+  }
+
+  const timeoutId = window.setTimeout(callback, 1);
+
+  return () => {
+    window.clearTimeout(timeoutId);
+  };
+}
+
+function scheduleVisible(element, callback) {
+  const observer = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) {
+      return;
+    }
+
+    observer.disconnect();
+    scheduledRoots.delete(element);
+    callback();
+  });
+
+  observer.observe(element);
+
+  return () => {
+    observer.disconnect();
+  };
+}
+
+function scheduleMount(element, loadMode, callback) {
+  if (mountedRoots.has(element) || scheduledRoots.has(element)) {
+    return undefined;
+  }
+
+  if (loadMode === 'immediate') {
+    return callback();
+  }
+
+  let cancel;
+
+  const run = () => {
+    scheduledRoots.delete(element);
+
+    if (!element.isConnected) {
+      return;
+    }
+
+    callback();
+  };
+
+  if (loadMode === 'idle') {
+    cancel = scheduleIdle(run);
+  }
+
+  if (loadMode === 'visible') {
+    if (typeof window.IntersectionObserver !== 'function') {
+      return callback();
+    }
+
+    cancel = scheduleVisible(element, run);
+  }
+
+  if (typeof cancel === 'function') {
+    scheduledRoots.set(element, { cancel });
+  }
+
+  return undefined;
+}
+
+function normalizeBootOptions(options) {
+  if (options && typeof options.querySelectorAll === 'function') {
+    return { root: options };
+  }
+
+  return options ?? {};
+}
+
+export function bootComponents(registry, options = {}) {
   // Public boot API for app.js keeps the common call site terse:
-  // bootComponents(componentRegistry).
-  return mountComponents(root, registry);
+  // bootComponents(componentRegistry, env).
+  const mountOptions = normalizeBootOptions(options);
+
+  return mountComponents(mountOptions.root ?? document, registry, mountOptions);
 }
 
 /**
@@ -116,37 +224,65 @@ export function bootComponents(registry, root = document) {
  * Use this after inserting server-rendered fragments that may contain
  * data-coral-component roots. Existing mounted roots are skipped.
  */
-export async function mountComponents(root = document, registry = {}) {
+export async function mountComponents(root = document, registry = {}, options = {}) {
   const rootsByName = groupRootsByComponentName(root);
+  const definitionPromises = new Map();
+  const mountTasks = [];
 
-  await Promise.all(
-    Array.from(rootsByName.entries()).map(async ([name, roots]) => {
-      const load = registry[name];
+  function getDefinitionPromise(name, load) {
+    if (!definitionPromises.has(name)) {
+      definitionPromises.set(name, load().then(getDefinition));
+    }
 
-      if (!load) {
-        warn(`Unknown Coral client component: ${name}`);
-        return;
+    return definitionPromises.get(name);
+  }
+
+  async function mountRegisteredRoot(element, name, load) {
+    try {
+      const definition = await getDefinitionPromise(name, load);
+
+      mountRoot(element, definition, {
+        name,
+        root,
+        pageType: options.pageType ?? '',
+        context: options.context ?? {},
+      });
+    } catch (mountError) {
+      error(`Failed to mount Coral client component: ${name}`, mountError);
+    }
+  }
+
+  for (const [name, roots] of rootsByName.entries()) {
+    const load = registry[name];
+
+    if (!load) {
+      warn(`Unknown Coral client component: ${name}`);
+      continue;
+    }
+
+    for (const element of roots) {
+      const task = scheduleMount(element, getLoadMode(element), () => {
+        return mountRegisteredRoot(element, name, load);
+      });
+
+      if (task) {
+        mountTasks.push(task);
       }
+    }
+  }
 
-      try {
-        const definition = getDefinition(await load());
-
-        for (const element of roots) {
-          try {
-            mountRoot(element, definition, { name, root });
-          } catch (mountError) {
-            error(`Failed to mount Coral client component: ${name}`, mountError);
-          }
-        }
-      } catch (loadError) {
-        error(`Failed to load Coral client component: ${name}`, loadError);
-      }
-    }),
-  );
+  await Promise.all(mountTasks);
 }
 
 export function unmountComponents(root = document) {
   for (const element of getComponentRoots(root)) {
+    const scheduled = scheduledRoots.get(element);
+
+    if (scheduled) {
+      scheduled.cancel();
+      scheduledRoots.delete(element);
+    }
+
     const mounted = mountedRoots.get(element);
 
     if (!mounted) {

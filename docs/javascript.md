@@ -13,7 +13,7 @@ Coral uses two small JavaScript models:
 
 These models run side by side. Preact owns client-rendered leaves. Theme modules add behavior to Handlebars markup. Shared state and native events let them coordinate when needed.
 
-Short model: templates publish page data to `window.Coral`; `context.js` reads it; `app.js` passes page data into theme setup, while components read named context values only when needed. Keep durable state in `assets/js/state/` and DOM behavior in `assets/js/theme/`.
+Short model: templates publish page data to `window.Coral`; `context.js` reads it; `app.js` passes the same page environment into client component mounting and theme setup. Keep durable state in `assets/js/state/` and DOM behavior in `assets/js/theme/`.
 
 ## Boot Flow
 
@@ -28,11 +28,13 @@ import { bootTheme } from './theme/boot.js';
 
 document.documentElement.classList.add('js');
 
-bootComponents(componentRegistry);
-bootTheme({
+const env = {
   pageType: getCoralPageType(),
   context: getCoralContext(),
-});
+};
+
+bootComponents(componentRegistry, env);
+bootTheme(env);
 ```
 
 Stencil templates expose the current page type and injected context before `app.js` loads:
@@ -98,7 +100,7 @@ function Counter({ initialCount = 0 }) {
 
 export default {
   component: Counter,
-  props(element) {
+  props(element, mountContext) {
     return {
       initialCount: Number.parseInt(element.dataset.initialCount ?? '0', 10),
     };
@@ -106,20 +108,59 @@ export default {
 };
 ```
 
+Client component modules export a definition object:
+
+```js
+export default {
+  component,
+  props(element, mountContext) {},
+  mount(element, mountContext) {},
+};
+```
+
+Most components should use `component` and `props()`. The `mount()` function is an escape hatch for unusual client modules that need to own their own rendering or third-party setup, and may return a cleanup function.
+
+`mountContext` includes:
+
+- `name`: the registered component name.
+- `root`: the document or subtree being mounted.
+- `pageType`: the current Stencil `page_type`.
+- `context`: injected `window.Coral.context` data.
+
+Use `data-coral-load` when a Preact root should not mount immediately:
+
+```html
+<div
+  data-coral-component="recommendations-carousel"
+  data-coral-load="visible"
+></div>
+```
+
+Supported loading modes:
+
+- Omitted or `immediate`: import and mount as soon as the runtime boots.
+- `idle`: wait for browser idle time, with a short timeout fallback.
+- `visible`: wait until the root enters the viewport, with an immediate fallback when `IntersectionObserver` is unavailable.
+
+Use `idle` for non-critical components that can appear after the first page interaction path has settled. Do not use it for UI that a shopper may trigger immediately, such as menus, search, product options, or the cart drawer.
+
 Rules:
 
 - Use `data-coral-component="<name>"` only for Preact client component mounts.
 - Use lower-case kebab-case names.
 - Keep initial props in simple `data-*` attributes where practical.
 - Use injected JSON context only when the client genuinely needs larger server-rendered data.
+- Use `data-coral-load` only for client components that can safely mount after initial boot.
 - Register components explicitly in `assets/js/runtime/registry.js`.
 - Do not put theme modules in the component registry.
 
-The component runtime owns discovery, lazy imports, one-time mounting, and unmounting for Preact roots.
+The component runtime owns discovery, lazy imports, loading hints, one-time mounting, and unmounting for Preact roots.
 
 ## Theme Modules
 
 Use theme modules for JavaScript that enhances server-rendered Handlebars markup.
+
+Coral's current Theme Module model is explicit setup functions. Templates use feature-specific hooks, and `assets/js/theme/boot.js` decides which setup functions run globally or by page type.
 
 Theme modules are plain setup functions:
 
@@ -178,6 +219,49 @@ Rules:
 - Preserve server-rendered fallbacks where practical.
 - Keep page setup explicit; do not add a global enhancement registry or generic `data-coral-enhancement` marker yet.
 - Do not introduce a PageManager class unless repeated real use proves it would simplify the theme.
+
+## Future Declarative Theme Modules
+
+A future Coral version may add declarative Theme Modules for repeated element-level behaviors. This would let templates declare the behavior they need while the runtime lazy-loads only matching modules.
+
+Potential markup:
+
+```html
+<form
+  action="/cart/add"
+  method="post"
+  data-coral-module="cart.add"
+  data-cart-open-on-success
+>
+  ...
+</form>
+```
+
+Potential module contract:
+
+```js
+export default function cartAddModule(element, env) {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    // Submit and update shared cart state.
+  };
+
+  element.addEventListener('submit', handleSubmit);
+
+  return () => {
+    element.removeEventListener('submit', handleSubmit);
+  };
+}
+```
+
+Do not implement this as a generic registry until there are enough repeated behaviors to justify the extra runtime. If Coral adopts it, the implementation should:
+
+- Use the namespaced `data-coral-module` attribute, not a generic `data-module` attribute.
+- Pass the same page environment used by components and explicit theme setup.
+- Deduplicate booting for already-mounted elements.
+- Require cleanup functions for modules that attach listeners or observers.
+- Support subtree mounting and unmounting for dynamically inserted server-rendered fragments.
+- Keep page-level orchestration in `assets/js/theme/boot.js` when behavior is truly page-wide.
 
 ## Shared State
 

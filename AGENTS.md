@@ -25,6 +25,7 @@ Stencil is BigCommerce's theme engine for building hosted storefronts. Themes ar
 - `assets/js/app.js` is the small boot entry that starts Preact client components and server-rendered theme setup.
 - `assets/js/context.js` is a read-only adapter for `window.Coral`; keep theme behavior in `assets/js/theme/` and mutable state in `assets/js/state/`.
 - Preact client component code may be co-located with its Handlebars partial under `templates/components/<name>/` while the component shape is still small and explicit.
+- Preact client component roots use `data-coral-component`; optional delayed mounting uses `data-coral-load="idle"` or `data-coral-load="visible"` when safe.
 - JavaScript for server-rendered markup lives under `assets/js/theme/<area>/` as plain setup functions.
 - Build output goes to ignored `assets/dist/` as `style.css` and `app.js`.
 - Reference built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`.

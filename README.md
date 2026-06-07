@@ -26,7 +26,7 @@ Local store config and credentials live in ignored `config.stencil.json` and `se
 
 Coral is intentionally smaller than Cornerstone. Use Handlebars for page structure and initial data, then add JavaScript only where the storefront needs interaction.
 
-Use plain theme modules in `assets/js/theme/` when JavaScript enhances server-rendered markup. Use Preact client components only when a specific UI leaf needs client-owned rendering. Keep client components co-located with their Handlebars partial while they are small and explicit.
+Use plain theme modules in `assets/js/theme/` when JavaScript enhances server-rendered markup. Use Preact client components only when a specific UI leaf needs client-owned rendering, with optional `data-coral-load` hints when delayed mounting is safe. Keep client components co-located with their Handlebars partial while they are small and explicit.
 
 Shared page context flows from templates into `window.Coral`, through `assets/js/context.js`, then into theme setup. Shared mutable state lives in `assets/js/state/`.
 

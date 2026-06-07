@@ -6,8 +6,10 @@ import { bootTheme } from './theme/boot.js';
 
 document.documentElement.classList.add('js');
 
-bootComponents(componentRegistry);
-bootTheme({
+const env = {
   pageType: getCoralPageType(),
   context: getCoralContext(),
-});
+};
+
+bootComponents(componentRegistry, env);
+bootTheme(env);
