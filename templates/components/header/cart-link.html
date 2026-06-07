@@ -1,11 +1,30 @@
 <a
     href="{{urls.cart}}"
-    class="inline-flex items-center gap-2 rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-950 transition hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+    class="relative inline-flex min-h-14 min-w-[4.5rem] flex-col items-center justify-center rounded border border-transparent bg-white px-2.5 py-1.5 text-slate-950 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
     data-cart-drawer-trigger
-    aria-label="Open cart, {{#if cart.quantity}}{{cart.quantity}}{{else}}0{{/if}} items"
+    aria-label="Open cart, {{#if cart.quantity}}{{cart.quantity}}{{else}}0{{/if}} items, {{#if cart.sub_total.formatted}}{{cart.sub_total.formatted}}{{else}}$0.00{{/if}} subtotal"
 >
-    <span aria-hidden="true">Cart</span>
+    <svg
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.75"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+        class="size-7"
+    >
+        <path d="M3 4h2.25l2 10.25a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 1.95-1.45L21 7H6"></path>
+        <circle cx="10" cy="20" r="1" fill="currentColor" stroke="none"></circle>
+        <circle cx="17" cy="20" r="1" fill="currentColor" stroke="none"></circle>
+    </svg>
     <span
-        class="inline-flex min-w-6 items-center justify-center rounded bg-slate-950 px-2 py-0.5 text-xs font-semibold text-white"
+        class="absolute right-1 top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1 text-[0.6875rem] font-semibold leading-none text-white"
     >{{#if cart.quantity}}{{cart.quantity}}{{else}}0{{/if}}</span>
+    <span class="text-sm font-semibold leading-none">
+        {{#if cart.sub_total.formatted}}{{cart.sub_total.formatted}}{{else}}$0.00{{/if}}
+    </span>
 </a>

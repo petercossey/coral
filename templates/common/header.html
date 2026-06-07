@@ -1,5 +1,5 @@
 <header class="relative border-b border-slate-200 bg-white">
-    <div class="mx-auto grid max-w-6xl gap-4 px-6 py-4 md:grid-cols-[minmax(8rem,1fr)_minmax(18rem,2fr)_minmax(8rem,1fr)] md:items-center">
+    <div class="grid w-full gap-4 px-4 py-2 sm:px-6 md:grid-cols-[minmax(11rem,1fr)_minmax(18rem,54rem)_minmax(11rem,1fr)] md:items-center lg:px-8 xl:px-10">
         <div class="flex items-center">
             <a href="{{urls.home}}" class="text-lg font-semibold text-slate-950">
                 {{#if settings.store_logo.title}}{{settings.store_logo.title}}{{else}}Coral{{/if}}
@@ -8,7 +8,8 @@
         <div class="w-full">
             {{> components/header/search-form urls=urls forms=forms}}
         </div>
-        <div class="flex items-center md:justify-end">
+        <div class="flex items-center gap-4 md:justify-end">
+            {{> components/header/account-link urls=urls}}
             {{> components/header/cart-link urls=urls cart=cart}}
         </div>
     </div>
