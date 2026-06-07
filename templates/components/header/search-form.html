@@ -1,0 +1,27 @@
+<form action="{{urls.search}}" method="get" class="relative w-full" role="search">
+    <label for="header-search-query" class="sr-only">Search products</label>
+    <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor"
+        aria-hidden="true"
+        class="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500"
+    >
+        <path
+            fill-rule="evenodd"
+            d="M7 11a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0m4.5-6.5a6.5 6.5 0 1 0 4.117 11.53l3.176 3.177 1.414-1.414-3.254-3.254A6.5 6.5 0 0 0 11.5 4.5"
+            clip-rule="evenodd"
+        ></path>
+    </svg>
+    <input
+        id="header-search-query"
+        class="h-11 w-full rounded-full border border-slate-300 bg-white pl-12 pr-4 text-sm text-slate-950 placeholder:text-slate-500 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+        type="search"
+        name="search_query"
+        value="{{forms.search.query}}"
+        placeholder="Search products"
+        autocomplete="off"
+    >
+</form>
