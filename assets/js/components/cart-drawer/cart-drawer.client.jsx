@@ -33,10 +33,25 @@ export function CartDrawer({ cartUrl = '/cart.php' }) {
           <h2 class="text-lg font-semibold text-slate-950">Cart</h2>
           <button
             type="button"
-            class="rounded border border-slate-300 px-3 py-2 text-sm font-medium text-slate-950 transition hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+            class="inline-flex size-10 items-center justify-center rounded text-slate-700 focus:outline-none cursor-pointer"
             onClick={closeCartDrawer}
+            aria-label="Close cart"
           >
-            Close
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              aria-hidden="true"
+              class="size-6"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 13.487 7.487 18 6 16.513 10.513 12 6 7.487 7.487 6 12 10.513 16.513 6 18 7.487 13.487 12 18 16.513 16.513 18z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
           </button>
         </div>
 
