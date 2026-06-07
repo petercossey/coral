@@ -18,7 +18,7 @@
         {{> common/header urls=urls cart=cart}}
         {{> common/body}}
         {{> common/footer}}
-        {{> components/cart-drawer/cart-drawer cart_url=urls.cart}}
+        <div data-coral-component="cart-drawer" data-cart-url="{{urls.cart}}"></div>
         <script nonce="{{nonce}}">
         window.Coral = window.Coral || {};
         window.Coral.pageType = '{{page_type}}';

@@ -2,7 +2,7 @@ import {
   closeSearchPreview,
   searchPreviewOpen,
   searchPreviewQuery,
-} from '../../../assets/js/state/search-preview.js';
+} from '../../state/search-preview.js';
 
 const placeholderItems = [
   'Product suggestions',

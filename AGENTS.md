@@ -24,7 +24,7 @@ Stencil is BigCommerce's theme engine for building hosted storefronts. Themes ar
 - Source CSS from `assets/css/style.css` and source JavaScript from `assets/js/app.js`.
 - `assets/js/app.js` is the small boot entry that starts Preact client components and server-rendered theme setup.
 - `assets/js/context.js` is a read-only adapter for `window.Coral`; keep theme behavior in `assets/js/theme/` and mutable state in `assets/js/state/`.
-- Preact client component code may be co-located with its Handlebars partial under `templates/components/<name>/` while the component shape is still small and explicit.
+- Preact client component code lives under `assets/js/components/<name>/`; simple `data-coral-component` roots may be written inline where they are rendered.
 - Preact client component roots use `data-coral-component`; optional delayed mounting uses `data-coral-load="idle"` or `data-coral-load="visible"` when safe.
 - JavaScript for server-rendered markup lives under `assets/js/theme/<area>/` as plain setup functions.
 - Build output goes to ignored `assets/dist/` as `style.css` and `app.js`.
@@ -57,7 +57,7 @@ Use the globally installed `stencil` command for local validation. Do not run th
 - Use `templates/layout/base.html` for normal storefront pages with the document shell, Coral assets, cart drawer mount, and shared structural partials.
 - Use `templates/layout/empty.html` for chrome-free system pages such as checkout; add only the checkout-specific head/content that page needs.
 - Keep shared structural regions such as header, body, and footer under `templates/common/`.
-- Keep `templates/components/` for feature-specific partials and small co-located client components, not broad layout structure.
+- Keep `templates/components/` for reusable feature-specific Handlebars partials, not client component implementations or broad layout structure. Add a Preact mount partial only when the mount markup needs meaningful template logic, reuse, or more structure than a local root element.
 
 ## Validation
 

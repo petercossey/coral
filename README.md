@@ -26,7 +26,7 @@ Local store config and credentials live in ignored `config.stencil.json` and `se
 
 Coral is intentionally smaller than Cornerstone. Use Handlebars for page structure and initial data, then add JavaScript only where the storefront needs interaction.
 
-Use plain theme modules in `assets/js/theme/` when JavaScript enhances server-rendered markup. Use Preact client components only when a specific UI leaf needs client-owned rendering, with optional `data-coral-load` hints when delayed mounting is safe. Keep client components co-located with their Handlebars partial while they are small and explicit.
+Use plain theme modules in `assets/js/theme/` when JavaScript enhances server-rendered markup. Use Preact client components only when a specific UI leaf needs client-owned rendering, with optional `data-coral-load` hints when delayed mounting is safe. Keep Preact implementations in `assets/js/components/`; put simple `data-coral-component` mount roots inline where they are rendered.
 
 Shared page context flows from templates into `window.Coral`, through `assets/js/context.js`, then into theme setup. Shared mutable state lives in `assets/js/state/`.
 
@@ -44,6 +44,7 @@ lang/en.json                Required language file
 assets/
   css/style.css             Tailwind CSS entry
   js/app.js                 Storefront JavaScript boot entry
+  js/components/            Preact client component implementations
   js/context.js             Read-only adapter for window.Coral
   js/runtime/               Preact component discovery and mounting
   js/state/                 Shared signal state
@@ -54,8 +55,7 @@ templates/
   layout/                   Base document layouts
   common/                   Shared structural regions for layout shells
   pages/                    Server-rendered Stencil pages
-  components/
-    <name>/                 Feature partials and small co-located clients
+  components/               Reusable feature partials
 
 docs/
   javascript.md             Client component and theme module conventions
@@ -63,7 +63,7 @@ docs/
 
 The storefront references built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`. Do not use Stencil's `{{stylesheet}}` helper for Coral's main CSS.
 
-Page templates define a `page` block and then render either `{{> layout/base}}` for normal storefront chrome or `{{> layout/empty}}` for chrome-free system pages such as checkout. Shared structural regions such as the site header, body wrapper, and footer live in `templates/common/`; `templates/components/` is reserved for feature-specific partials and co-located client components.
+Page templates define a `page` block and then render either `{{> layout/base}}` for normal storefront chrome or `{{> layout/empty}}` for chrome-free system pages such as checkout. Shared structural regions such as the site header, body wrapper, and footer live in `templates/common/`; `templates/components/` is reserved for reusable feature-specific Handlebars partials. Create a mount partial there only when the mount markup has meaningful template logic, reuse, or more structure than a local root element.
 
 ## Commands
 

@@ -50,42 +50,26 @@ Stencil templates expose the current page type and injected context before `app.
 
 This is inspired by Cornerstone's useful PageManager idea: global setup runs on every page, and page setup can run by `page_type`. Coral does not copy Cornerstone's class structure, jQuery assumptions, or broad plugin conventions.
 
-## File Layout
+## Key Paths
 
-Current JavaScript layout:
+Coral's JavaScript layout is intentionally shallow. Keep the docs focused on stable homes for code instead of mirroring every file in the tree:
 
 ```text
 assets/js/
-  app.js
-  context.js
-  events.js
-  runtime/
-    boot.js
-    registry.js
-  state/
-    cart.js
-    search-preview.js
-  theme/
-    boot.js
-    global.js
-    header/
-      header-cart.js
-      header-search.js
-
-templates/components/
-  cart-drawer/
-    cart-drawer.html
-    cart-drawer.client.jsx
-  search-preview/
-    search-preview.html
-    search-preview.client.jsx
+  app.js                  Storefront boot entry.
+  context.js              Read-only adapter for window.Coral.
+  events.js               Native Coral event helpers.
+  components/<name>/      Preact client component implementations.
+  runtime/                Component mounting runtime and registry.
+  state/                  Shared mutable state, usually signals.
+  theme/<area>/           Plain setup modules for server-rendered DOM.
 ```
 
 Grow this only when real pages or repeated interactions need it.
 
 ## Client Components
 
-Use client components for isolated UI leaves that Preact should own.
+Use client components for isolated UI leaves that Preact should own. Preact implementations live in `assets/js/components/<name>/`. The mount root is ordinary template markup: write simple roots inline where they are rendered, and create a Handlebars partial only when the mount markup has meaningful template logic, reuse, or more structure than a local root element.
 
 Markup:
 
@@ -153,6 +137,9 @@ Rules:
 
 - Use `data-coral-component="<name>"` only for Preact client component mounts.
 - Use lower-case kebab-case names.
+- Keep Preact client implementation modules under `assets/js/components/<name>/`.
+- Write one-off mount roots inline in the owning template.
+- Create a Handlebars mount partial only when the mount markup needs conditionals, repeated use, or nontrivial server-rendered structure.
 - Keep initial props in simple `data-*` attributes where practical.
 - Use injected JSON context only when the client genuinely needs larger server-rendered data.
 - Use `data-coral-load` only for client components that can safely mount after initial boot.
@@ -233,7 +220,7 @@ The search preview spike follows this pattern:
 
 - `assets/js/theme/header/header-search.js` enhances the server-rendered header search form on the homepage.
 - `assets/js/state/search-preview.js` owns `searchPreviewOpen` and `searchPreviewQuery`, and emits `coral:search-preview:activated`, `coral:search-preview:query-change`, and `coral:search-preview:closed`.
-- `templates/components/search-preview/search-preview.client.jsx` consumes those signals and renders placeholder preview content from a root outside the search form.
+- `assets/js/components/search-preview/search-preview.client.jsx` consumes those signals and renders placeholder preview content from a root outside the search form.
 
 ## Future Declarative Theme Modules
 

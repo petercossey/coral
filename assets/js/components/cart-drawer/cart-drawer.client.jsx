@@ -1,4 +1,4 @@
-import { cartDrawerOpen, closeCartDrawer } from '../../../assets/js/state/cart.js';
+import { cartDrawerOpen, closeCartDrawer } from '../../state/cart.js';
 
 export function CartDrawer({ cartUrl = '/cart.php' }) {
   const isOpen = cartDrawerOpen.value;
