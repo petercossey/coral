@@ -13,6 +13,7 @@
             {{> components/header/cart-link urls=urls cart=cart}}
         </div>
     </div>
+    {{> components/header/category-navigation categories=categories}}
     {{#if page_type '===' 'default'}}
         <div data-coral-component="search-preview"></div>
     {{/if}}
