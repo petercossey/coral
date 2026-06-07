@@ -1,4 +1,4 @@
-<form action="{{urls.search}}" method="get" class="relative w-full" role="search">
+<form action="{{urls.search}}" method="get" class="relative w-full" role="search" data-header-search-form>
     <label for="header-search-query" class="sr-only">Search products</label>
     <svg
         width="24"
@@ -23,5 +23,6 @@
         value="{{forms.search.query}}"
         placeholder="Search products"
         autocomplete="off"
+        data-header-search-input
     >
 </form>

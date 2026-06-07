@@ -64,16 +64,21 @@ assets/js/
     registry.js
   state/
     cart.js
+    search-preview.js
   theme/
     boot.js
     global.js
     header/
       header-cart.js
+      header-search.js
 
 templates/components/
   cart-drawer/
     cart-drawer.html
     cart-drawer.client.jsx
+  search-preview/
+    search-preview.html
+    search-preview.client.jsx
 ```
 
 Grow this only when real pages or repeated interactions need it.
@@ -219,6 +224,16 @@ Rules:
 - Preserve server-rendered fallbacks where practical.
 - Keep page setup explicit; do not add a global enhancement registry or generic `data-coral-enhancement` marker yet.
 - Do not introduce a PageManager class unless repeated real use proves it would simplify the theme.
+
+## Shared State And Events
+
+Use `assets/js/state/` when separate pieces of the theme need to coordinate without querying each other's DOM. Theme modules write through small state functions, client components read the exported signals, and state functions may emit native Coral events through `assets/js/events.js` when other modules need a loose subscription point.
+
+The search preview spike follows this pattern:
+
+- `assets/js/theme/header/header-search.js` enhances the server-rendered header search form on the homepage.
+- `assets/js/state/search-preview.js` owns `searchPreviewOpen` and `searchPreviewQuery`, and emits `coral:search-preview:activated`, `coral:search-preview:query-change`, and `coral:search-preview:closed`.
+- `templates/components/search-preview/search-preview.client.jsx` consumes those signals and renders placeholder preview content from a root outside the search form.
 
 ## Future Declarative Theme Modules
 
