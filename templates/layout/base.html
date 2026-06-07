@@ -18,7 +18,13 @@
         {{> common/header urls=urls cart=cart}}
         {{> common/body}}
         {{> common/footer}}
-        <div data-coral-component="cart-drawer" data-cart-url="{{urls.cart}}"></div>
+        <div
+            data-coral-component="cart-drawer"
+            data-cart-url="{{urls.cart}}"
+            data-cart-id="{{cart_id}}"
+            data-cart-quantity="{{#if cart.quantity}}{{cart.quantity}}{{else}}0{{/if}}"
+            data-cart-subtotal="{{#if cart.sub_total.formatted}}{{cart.sub_total.formatted}}{{else}}$0.00{{/if}}"
+        ></div>
         <script nonce="{{nonce}}">
         window.Coral = window.Coral || {};
         window.Coral.pageType = '{{page_type}}';

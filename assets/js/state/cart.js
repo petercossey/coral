@@ -1,8 +1,42 @@
 import { signal } from '@preact/signals';
 
-// Shared cart state starts with the only cross-root concern we need today:
-// the server-rendered cart link can open the Preact-owned drawer.
 export const cartDrawerOpen = signal(false);
+export const cartSummary = signal(null);
+
+function parseQuantity(value) {
+  const quantity = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(quantity) || quantity < 0) {
+    return 0;
+  }
+
+  return quantity;
+}
+
+function normalizePrice(price, fallback = '') {
+  const source = price && typeof price === 'object' ? price : {};
+
+  return {
+    value: Number.isFinite(source.value) ? source.value : null,
+    formatted: typeof source.formatted === 'string' && source.formatted.trim() ? source.formatted.trim() : fallback,
+    currencyCode: typeof source.currencyCode === 'string' && source.currencyCode.trim() ? source.currencyCode.trim() : null,
+  };
+}
+
+function normalizeCartSummary(summary = {}, metadata = {}) {
+  const subtotal = normalizePrice(summary.subtotal, '$0.00');
+
+  return {
+    id: typeof summary.id === 'string' && summary.id.trim() ? summary.id.trim() : null,
+    quantity: parseQuantity(summary.quantity),
+    subtotal,
+    total: normalizePrice(summary.total),
+    items: Array.isArray(summary.items) ? summary.items : [],
+    source: metadata.source || summary.source || 'server',
+    stale: metadata.stale ?? summary.stale ?? true,
+    updatedAt: metadata.updatedAt || Date.now(),
+  };
+}
 
 export function openCartDrawer() {
   cartDrawerOpen.value = true;
@@ -10,4 +44,28 @@ export function openCartDrawer() {
 
 export function closeCartDrawer() {
   cartDrawerOpen.value = false;
+}
+
+export function seedCartSummary(summary) {
+  const currentSummary = cartSummary.value;
+
+  if (currentSummary && currentSummary.source !== 'server') {
+    return currentSummary;
+  }
+
+  cartSummary.value = normalizeCartSummary(summary, {
+    source: 'server',
+    stale: true,
+  });
+
+  return cartSummary.value;
+}
+
+export function replaceCartSummary(summary, metadata = {}) {
+  cartSummary.value = normalizeCartSummary(summary, {
+    stale: false,
+    ...metadata,
+  });
+
+  return cartSummary.value;
 }

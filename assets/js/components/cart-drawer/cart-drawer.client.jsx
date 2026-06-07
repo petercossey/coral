@@ -1,13 +1,21 @@
-import { cartDrawerOpen, closeCartDrawer } from '../../state/cart.js';
+import { cartDrawerOpen, cartSummary, closeCartDrawer, seedCartSummary } from '../../state/cart.js';
+
+function getItemLabel(quantity) {
+  return quantity === 1 ? '1 item' : `${quantity} items`;
+}
 
 export function CartDrawer({ cartUrl = '/cart.php' }) {
   const isOpen = cartDrawerOpen.value;
+  const summary = cartSummary.value;
+  const quantity = summary?.quantity ?? 0;
+  const subtotal = summary?.subtotal?.formatted || '$0.00';
+  const hasCartItems = quantity > 0;
 
   return (
     <div
-      // #TODO: When closed, keep drawer controls out of the tab order; pointer-events alone only prevents mouse interaction.
       class={`fixed inset-0 z-50 ${isOpen ? '' : 'pointer-events-none'}`}
       aria-hidden={isOpen ? 'false' : 'true'}
+      inert={!isOpen}
     >
       <button
         type="button"
@@ -32,8 +40,32 @@ export function CartDrawer({ cartUrl = '/cart.php' }) {
           </button>
         </div>
 
-        <div class="min-h-0 flex-1 px-5 py-6">
-          {/* #todo Implement cart contents after the data source and refresh strategy are settled. */}
+        <div class="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+          {hasCartItems ? (
+            <div class="flex flex-col gap-5">
+              <div class="border border-slate-200 bg-slate-50 p-4">
+                <h3 class="text-sm font-semibold text-slate-950">Cart summary</h3>
+                <dl class="mt-4 flex flex-col gap-3">
+                  <div class="flex items-center justify-between gap-4">
+                    <dt class="text-sm text-slate-600">Items</dt>
+                    <dd class="text-sm font-semibold text-slate-950">{getItemLabel(quantity)}</dd>
+                  </div>
+                  <div class="flex items-center justify-between gap-4 border-t border-slate-200 pt-3">
+                    <dt class="text-sm text-slate-600">Subtotal</dt>
+                    <dd class="text-base font-semibold text-slate-950">{subtotal}</dd>
+                  </div>
+                </dl>
+              </div>
+              <p class="text-sm leading-6 text-slate-600">
+                Open the full cart to review items, discounts, shipping, and checkout options.
+              </p>
+            </div>
+          ) : (
+            <div class="flex min-h-48 flex-col items-center justify-center border border-dashed border-slate-300 px-4 py-10 text-center">
+              <p class="text-base font-semibold text-slate-950">Your cart is empty.</p>
+              <p class="mt-2 max-w-64 text-sm leading-6 text-slate-600">Items you add will appear here.</p>
+            </div>
+          )}
         </div>
 
         <div class="border-t border-slate-200 px-5 py-4">
@@ -52,6 +84,14 @@ export function CartDrawer({ cartUrl = '/cart.php' }) {
 export default {
   component: CartDrawer,
   props(element) {
+    seedCartSummary({
+      id: element.dataset.cartId || null,
+      quantity: element.dataset.cartQuantity,
+      subtotal: {
+        formatted: element.dataset.cartSubtotal,
+      },
+    });
+
     return {
       cartUrl: element.dataset.cartUrl || '/cart.php',
     };
