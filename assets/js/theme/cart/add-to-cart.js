@@ -197,6 +197,14 @@ function handleClick(event) {
   addToCart(link, url, productId)
     .catch((error) => {
       console.error('Unable to add item to cart.', error);
+      emit('cart:item-add-failed', {
+        productId,
+        quantity,
+        fallbackUrl: url.href,
+        message: 'Unable to add item to cart. Try again.',
+        source: 'product-card',
+        element: link,
+      });
     })
     .finally(() => {
       setLinkBusy(link, false);

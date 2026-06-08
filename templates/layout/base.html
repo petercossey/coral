@@ -25,6 +25,7 @@
             data-cart-quantity="{{#if cart.quantity}}{{cart.quantity}}{{else}}0{{/if}}"
             data-cart-subtotal="{{#if cart.sub_total.formatted}}{{cart.sub_total.formatted}}{{else}}$0.00{{/if}}"
         ></div>
+        <div data-coral-component="notifications"></div>
         <script nonce="{{nonce}}">
         window.Coral = window.Coral || {};
         window.Coral.pageType = '{{page_type}}';

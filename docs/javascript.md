@@ -297,6 +297,7 @@ Use native events for moments and notifications, not durable state.
 Call `emit()` / `on()` with unprefixed event topics:
 
 - `cart:item-added`
+- `cart:item-add-failed`
 - `product:variant-selected`
 - `modal:close-requested`
 
@@ -314,7 +315,7 @@ That example shows the intended coordination:
 - The cart drawer remains a Preact client component.
 - Shared cart state is the bridge between them.
 
-When a product-card add-to-cart enhancement receives a successful Storefront API cart response, it passes that response to `replaceCartSummary()` before emitting `cart:item-added`. The header and drawer then render from `cartSummary` instead of listening to the mutation and guessing how totals changed.
+When a product-card add-to-cart enhancement receives a successful Storefront API cart response, it passes that response to `replaceCartSummary()` before emitting `cart:item-added`. The header and drawer then render from `cartSummary` instead of listening to the mutation and guessing how totals changed. If the enhanced add-to-cart request fails, the module emits `cart:item-add-failed` so notification UI can report the recoverable error without owning cart state.
 
 Use this as the cart-state boundary:
 
