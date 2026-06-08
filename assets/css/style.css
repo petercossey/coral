@@ -21,3 +21,37 @@
   cursor: wait;
   opacity: 0.72;
 }
+
+[data-cart-link-count] {
+  --cart-count-update-duration: 425ms;
+  --cart-count-update-ease: cubic-bezier(0.2, 0.8, 0.2, 1.2);
+  --cart-count-update-scale-peak: 1.14;
+  --cart-count-update-scale-settle: 0.98;
+  --cart-count-update-lift: -1px;
+  transform-origin: center;
+}
+
+[data-cart-link-count].is-cart-count-updating {
+  animation: coral-cart-count-update var(--cart-count-update-duration) var(--cart-count-update-ease);
+}
+
+@keyframes coral-cart-count-update {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  42% {
+    transform: translateY(var(--cart-count-update-lift)) scale(var(--cart-count-update-scale-peak));
+  }
+
+  72% {
+    transform: translateY(0) scale(var(--cart-count-update-scale-settle));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-cart-link-count].is-cart-count-updating {
+    animation: none;
+  }
+}
