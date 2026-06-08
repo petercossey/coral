@@ -314,6 +314,16 @@ That example shows the intended coordination:
 - The cart drawer remains a Preact client component.
 - Shared cart state is the bridge between them.
 
+When a product-card add-to-cart enhancement receives a successful Storefront API cart response, it passes that response to `replaceCartSummary()` before emitting `cart:item-added`. The header and drawer then render from `cartSummary` instead of listening to the mutation and guessing how totals changed.
+
+Use this as the cart-state boundary:
+
+- Mutation modules validate and perform their own interaction, then update cart state with reliable cart data.
+- Reader modules and client components render from `cartSummary`.
+- Events announce moments such as `cart:item-added`; they are not durable cart totals.
+
+See `docs/cart-state-and-ui-updates.md` for the cart-specific design note.
+
 ## Future Work
 
 Keep these decisions open until real features need them:

@@ -43,6 +43,7 @@ Keep existing analytics attributes if the template needs them, but do not use th
 - Enhance simple product-card add-to-cart links only.
 - Prevent duplicate submission while a request is in flight.
 - Keep user feedback minimal for the first pass.
+- Route successful cart responses through shared cart state.
 - Emit a Coral event after a successful add so future cart features can react.
 - Keep the implementation as a plain theme setup module under `assets/js/theme/cart/`.
 
@@ -50,7 +51,7 @@ Keep existing analytics attributes if the template needs them, but do not use th
 
 - Do not replace product cards with Preact.
 - Do not handle product options, quantity controls, or full product forms in this pass.
-- Do not update the cart drawer or header cart count yet.
+- Do not let the add-to-cart module update the cart drawer or header DOM directly.
 - Do not introduce Stencil Utils, GraphQL, a broad cart API abstraction, or a generic enhancement registry yet.
 - Do not add a full toast, alert, or inline error system yet.
 - Do not AJAX-enhance pre-order links yet; leave `pre_order_add_to_cart_url` anchors as normal links.
@@ -144,7 +145,9 @@ First pass cart ID policy:
 3. If no cart ID is known, call `POST /api/storefront/carts` with the line item.
 4. If a known cart ID add fails because the cart no longer exists or is stale, log the error in this pass. A later cart coordinator can refresh with `GET /api/storefront/carts`, clear stale state, and retry when the UX requires it.
 
-The REST mutation response returns structured cart JSON. The add-to-cart module can emit it immediately for future listeners, and shared cart state can normalize it once cart drawer/header updates are introduced.
+The REST mutation response returns structured cart JSON. The add-to-cart module should pass that response to shared cart state before emitting any success event. Shared state owns normalization and durable state replacement; the module should not update header, drawer, or other cart UI directly.
+
+The current implementation calls `replaceCartSummary(cart, { source: 'rest-storefront' })` when the REST response returns a complete cart object. That lets the header cart link and cart drawer render from the same `cartSummary` signal.
 
 ## Stencil Utils Research
 
@@ -244,9 +247,10 @@ On a standard click:
 8. If no cart ID exists, request `POST /api/storefront/carts`.
 9. If the response is not OK, throw an error.
 10. Parse the JSON response.
-11. On success, emit an event with the product ID, quantity, fallback URL, cart response, source type, and source element.
-12. On failure, log the error.
-13. Restore the link to its idle state.
+11. On success, pass the cart response to shared cart state.
+12. Emit an event with the product ID, quantity, fallback URL, cart response, source type, and source element.
+13. On failure, log the error.
+14. Restore the link to its idle state.
 
 The eligibility check happens before `event.preventDefault()`. This keeps the enhancement narrow and avoids breaking unusual storefront links. The REST request happens only after the fallback URL has been proven to represent a normal direct add link.
 
@@ -279,14 +283,14 @@ emit('cart:item-added', {
 });
 ```
 
-This event is a notification that the initiating REST mutation completed. It can include the structured cart JSON returned by the Storefront Cart API, but shared cart state should still own normalization and durable state replacement. Do not include raw fallback URL response HTML because the enhanced path should not fetch `/cart.php`.
+This event is a notification that the initiating REST mutation completed. It can include the structured cart JSON returned by the Storefront Cart API, but shared cart state owns normalization and durable state replacement. Emit the event after the state update so event listeners see current cart state when they run. Do not include raw fallback URL response HTML because the enhanced path should not fetch `/cart.php`.
 
-Future cart drawer or header modules can listen for the event and decide whether to normalize the returned cart, refresh cart state, open the drawer, or update visible counts.
+Future cart drawer or header modules can listen for the event when they need a moment notification, such as opening the drawer or showing feedback. Visible count and amount updates should render from `cartSummary`, not from the event payload.
 
 Theme-wide cart concerns for later phases:
 
 - A shared cart state module should own durable cart data such as ID, summary, line items, freshness, loading, and errors.
-- Mutation modules should announce successful mutations, but state modules should decide when and how to refresh cart data.
+- Mutation modules should pass successful mutation responses to state, then announce the mutation when a moment notification is useful.
 - Multiple mutation sources can exist: product cards, product forms, cart drawer quantity controls, remove buttons, coupons, and gift certificates.
 - Once multiple mutations exist, cart requests need a concurrency policy so stale refreshes do not overwrite newer state.
 - The cart drawer should not reach into product cards or header DOM. It should react to shared state and explicit events.
@@ -320,4 +324,4 @@ The enhancement should keep accessibility work minimal:
 - Should product forms use a Coral `FormData` implementation, Stencil Utils, or the REST Storefront Cart API?
 - Should the add-to-cart module retry through cart refresh if a known cart ID is stale?
 
-The stable decisions for the first implementation are the module location, template hook, `/cart.php?action=add` fallback behavior, REST Storefront Cart API enhanced mutation, normal pre-order links, and the `cart:item-added` event topic.
+The stable decisions are the module location, template hook, `/cart.php?action=add` fallback behavior, REST Storefront Cart API enhanced mutation, shared cart state update, normal pre-order links, and the `cart:item-added` event topic.

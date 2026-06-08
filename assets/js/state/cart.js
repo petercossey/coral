@@ -24,6 +24,67 @@ function parseQuantity(value) {
   return quantity;
 }
 
+function getLineItems(cart) {
+  const lineItems = cart?.lineItems && typeof cart.lineItems === 'object' ? cart.lineItems : {};
+
+  return [
+    ...(Array.isArray(lineItems.physicalItems) ? lineItems.physicalItems : []),
+    ...(Array.isArray(lineItems.digitalItems) ? lineItems.digitalItems : []),
+    ...(Array.isArray(lineItems.giftCertificates) ? lineItems.giftCertificates : []),
+    ...(Array.isArray(lineItems.customItems) ? lineItems.customItems : []),
+  ];
+}
+
+function getLineItemQuantity(cart) {
+  return getLineItems(cart).reduce((total, item) => total + parseQuantity(item?.quantity), 0);
+}
+
+function getCurrencyFormatter(currency) {
+  const currencyCode = typeof currency?.code === 'string' && currency.code.trim() ? currency.code.trim() : null;
+
+  if (!currencyCode) {
+    return null;
+  }
+
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currencyCode,
+      currencyDisplay: 'narrowSymbol',
+    });
+  } catch {
+    return null;
+  }
+}
+
+function formatCartAmount(value, currency) {
+  if (!Number.isFinite(value)) {
+    return '';
+  }
+
+  const formatter = getCurrencyFormatter(currency);
+
+  if (formatter) {
+    return formatter.format(value);
+  }
+
+  const symbol = typeof currency?.symbol === 'string' ? currency.symbol : '';
+  const decimalPlaces = Number.isInteger(currency?.decimalPlaces) ? currency.decimalPlaces : 2;
+
+  return `${symbol}${value.toFixed(decimalPlaces)}`;
+}
+
+function normalizeNumericPrice(value, currency) {
+  return normalizePrice(
+    {
+      value,
+      formatted: formatCartAmount(value, currency),
+      currencyCode: currency?.code,
+    },
+    '',
+  );
+}
+
 function normalizePrice(price, fallback = '') {
   const source = price && typeof price === 'object' ? price : {};
 
@@ -35,14 +96,21 @@ function normalizePrice(price, fallback = '') {
 }
 
 function normalizeCartSummary(summary = {}, metadata = {}) {
-  const subtotal = normalizePrice(summary.subtotal, '$0.00');
+  const hasRestLineItems = summary.lineItems && typeof summary.lineItems === 'object';
+  const quantity = summary.quantity ?? (hasRestLineItems ? getLineItemQuantity(summary) : 0);
+  const subtotal = Number.isFinite(summary.baseAmount)
+    ? normalizeNumericPrice(summary.baseAmount, summary.currency)
+    : normalizePrice(summary.subtotal, '$0.00');
+  const total = Number.isFinite(summary.cartAmount)
+    ? normalizeNumericPrice(summary.cartAmount, summary.currency)
+    : normalizePrice(summary.total);
 
   return {
     id: normalizeCartId(summary.id),
-    quantity: parseQuantity(summary.quantity),
+    quantity: parseQuantity(quantity),
     subtotal,
-    total: normalizePrice(summary.total),
-    items: Array.isArray(summary.items) ? summary.items : [],
+    total,
+    items: Array.isArray(summary.items) ? summary.items : getLineItems(summary),
     source: metadata.source || summary.source || 'server',
     stale: metadata.stale ?? summary.stale ?? true,
     updatedAt: metadata.updatedAt || Date.now(),

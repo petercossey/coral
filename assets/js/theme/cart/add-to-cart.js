@@ -1,5 +1,5 @@
 import { emit } from '../../events.js';
-import { getCurrentCartId, rememberCartId } from '../../state/cart.js';
+import { getCurrentCartId, rememberCartId, replaceCartSummary } from '../../state/cart.js';
 
 const selector = 'a[data-coral-add-to-cart]';
 const initializedLinks = new WeakSet();
@@ -150,7 +150,11 @@ async function addToCart(link, fallbackUrl, productId) {
   const cart = await postCartLineItem(productId, knownCartId);
   const cartId = getCartIdFromResponse(cart) || knownCartId;
 
-  rememberCartId(cartId);
+  if (cart) {
+    replaceCartSummary(cart, { source: 'rest-storefront' });
+  } else {
+    rememberCartId(cartId);
+  }
 
   emit('cart:item-added', {
     productId,

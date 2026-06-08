@@ -10,9 +10,9 @@ This document records the intended direction before implementation.
 
 - `templates/layout/base.html` mounts the cart drawer with `data-coral-component="cart-drawer"` and a `data-cart-url` prop.
 - `templates/common/header.html` renders the header cart link from the Stencil `cart` object.
-- `assets/js/theme/header/header-cart.js` intercepts standard cart-link clicks and calls `openCartDrawer()`.
-- `assets/js/state/cart.js` currently owns only `cartDrawerOpen`.
-- `assets/js/components/cart-drawer/cart-drawer.client.jsx` owns the drawer UI shell, but it intentionally has no cart-content implementation yet.
+- `assets/js/theme/header/header-cart.js` intercepts standard cart-link clicks, calls `openCartDrawer()`, and updates its own count/subtotal from shared cart state.
+- `assets/js/state/cart.js` owns `cartDrawerOpen`, the known cart ID, and a normalized `cartSummary`.
+- `assets/js/components/cart-drawer/cart-drawer.client.jsx` owns the drawer UI shell and renders the current cart summary.
 
 The existing structure is the right foundation: server-rendered markup can trigger a Preact-owned leaf through shared state.
 
@@ -255,11 +255,8 @@ Near-term:
 
 - It continues to display server-rendered quantity and subtotal.
 - It opens the drawer through `openCartDrawer()`.
-
-Future:
-
 - It can read `cartSummary` and update its count/subtotal after client-side cart changes.
-- If that becomes necessary, add a small theme module enhancement for the header cart link rather than letting the drawer reach into the header DOM.
+- It should update only its own markup rather than letting the drawer or mutation modules reach into the header DOM.
 
 ## Events
 
@@ -296,7 +293,7 @@ Do not add these events until at least one non-state consumer needs them.
 
 ### Phase 3: Cart-Aware Theme Interactions
 
-- Add a product add-to-cart theme module only when product form markup exists.
+- Add product add-to-cart theme modules only when the relevant server-rendered markup exists.
 - Route successful add-to-cart responses into shared cart state.
 - Open the drawer on successful add when requested by markup.
 - Keep non-JavaScript form submission fallback.

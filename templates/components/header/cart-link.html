@@ -23,8 +23,9 @@
     </svg>
     <span
         class="absolute right-1 top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-600 px-1 text-[0.6875rem] font-semibold leading-none text-white"
+        data-cart-link-count
     >{{#if cart.quantity}}{{cart.quantity}}{{else}}0{{/if}}</span>
-    <span class="text-sm font-semibold leading-none">
+    <span class="text-sm font-semibold leading-none" data-cart-link-subtotal>
         {{#if cart.sub_total.formatted}}{{cart.sub_total.formatted}}{{else}}$0.00{{/if}}
     </span>
 </a>
