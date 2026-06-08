@@ -12,3 +12,12 @@
     margin: 0;
   }
 }
+
+[data-coral-add-to-cart] {
+  min-width: 7.25rem;
+}
+
+[data-coral-add-to-cart][data-coral-busy="true"] {
+  cursor: wait;
+  opacity: 0.72;
+}

@@ -61,9 +61,15 @@
                                     </a>
                                 {{else}}
                                     {{#if add_to_cart_url}}
-                                        <a class="inline-flex shrink-0 items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium" href="{{add_to_cart_url}}" data-event-type="product-click" data-button-type="add-cart" data-product-id="{{id}}">
-                                            {{#if pre_order}}Pre-order{{else}}Add to cart{{/if}}
-                                        </a>
+                                        {{#if pre_order}}
+                                            <a class="inline-flex shrink-0 items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium" href="{{add_to_cart_url}}" data-event-type="product-click" data-button-type="add-cart" data-product-id="{{id}}">
+                                                Pre-order
+                                            </a>
+                                        {{else}}
+                                            <a class="inline-flex shrink-0 items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium" href="{{add_to_cart_url}}" data-coral-add-to-cart data-event-type="product-click" data-button-type="add-cart" data-product-id="{{id}}">
+                                                Add to cart
+                                            </a>
+                                        {{/if}}
                                     {{/if}}
                                 {{/if}}
                             {{/if}}

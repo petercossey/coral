@@ -2,6 +2,17 @@ import { signal } from '@preact/signals';
 
 export const cartDrawerOpen = signal(false);
 export const cartSummary = signal(null);
+const currentCartId = signal(null);
+
+function normalizeCartId(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const cartId = value.trim();
+
+  return cartId || null;
+}
 
 function parseQuantity(value) {
   const quantity = Number.parseInt(value, 10);
@@ -27,7 +38,7 @@ function normalizeCartSummary(summary = {}, metadata = {}) {
   const subtotal = normalizePrice(summary.subtotal, '$0.00');
 
   return {
-    id: typeof summary.id === 'string' && summary.id.trim() ? summary.id.trim() : null,
+    id: normalizeCartId(summary.id),
     quantity: parseQuantity(summary.quantity),
     subtotal,
     total: normalizePrice(summary.total),
@@ -46,6 +57,20 @@ export function closeCartDrawer() {
   cartDrawerOpen.value = false;
 }
 
+export function getCurrentCartId() {
+  return currentCartId.value || normalizeCartId(cartSummary.value?.id);
+}
+
+export function rememberCartId(cartId) {
+  const normalizedCartId = normalizeCartId(cartId);
+
+  if (normalizedCartId) {
+    currentCartId.value = normalizedCartId;
+  }
+
+  return currentCartId.value;
+}
+
 export function seedCartSummary(summary) {
   const currentSummary = cartSummary.value;
 
@@ -57,6 +82,7 @@ export function seedCartSummary(summary) {
     source: 'server',
     stale: true,
   });
+  rememberCartId(cartSummary.value.id);
 
   return cartSummary.value;
 }
@@ -66,6 +92,7 @@ export function replaceCartSummary(summary, metadata = {}) {
     stale: false,
     ...metadata,
   });
+  rememberCartId(cartSummary.value.id);
 
   return cartSummary.value;
 }

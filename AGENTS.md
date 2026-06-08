@@ -36,6 +36,7 @@ Stencil is BigCommerce's theme engine for building hosted storefronts. Themes ar
 
 - Cornerstone reference theme: `/Users/peter.cossey/www/coral-project/cornerstone`
 - Stencil CLI source reference: `/Users/peter.cossey/www/coral-project/stencil-cli`
+- Stencil Utils source reference: `/Users/peter.cossey/www/coral-project/stencil-utils`
 - BigCommerce developer docs: `/Users/peter.cossey/www/coral-project/developer-docs`
 
 Use Cornerstone and the docs to confirm Stencil expectations, template names, config shape, theme objects, and packaging behavior. Treat Cornerstone as reference material, not as a base to copy wholesale.
