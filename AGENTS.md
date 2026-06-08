@@ -55,7 +55,7 @@ Use the globally installed `stencil` command for local validation. Do not run th
 ## Template Layout
 
 - Page templates define a `page` block and then render `{{> layout/base}}` or `{{> layout/empty}}`.
-- Use `templates/layout/base.html` for normal storefront pages with the document shell, Coral assets, cart drawer mount, and shared structural partials.
+- Use `templates/layout/base.html` for normal storefront pages with the document shell, Coral assets, shared client mounts such as cart drawer and notifications, and shared structural partials.
 - Use `templates/layout/empty.html` for chrome-free system pages such as checkout; add only the checkout-specific head/content that page needs.
 - Keep shared structural regions such as header, body, and footer under `templates/common/`.
 - Keep `templates/components/` for reusable feature-specific Handlebars partials, not client component implementations or broad layout structure. Add a Preact mount partial only when the mount markup needs meaningful template logic, reuse, or more structure than a local root element.

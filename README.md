@@ -59,6 +59,7 @@ templates/
 
 docs/
   javascript.md             Client component and theme module conventions
+  *.md                      Directional feature and workflow notes
 ```
 
 The storefront references built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`. Do not use Stencil's `{{stylesheet}}` helper for Coral's main CSS.
@@ -71,3 +72,12 @@ Page templates define a `page` block and then render either `{{> layout/base}}` 
 - `npm run dev` watches and rebuilds assets; this is run by `stencil start`.
 - `stencil start` runs the local storefront.
 - `stencil bundle` validates and packages the theme.
+
+## Docs
+
+- [docs/javascript.md](docs/javascript.md): stable JavaScript conventions for components, theme modules, state, and events.
+- [docs/cart-state-and-ui-updates.md](docs/cart-state-and-ui-updates.md): directional cart state boundaries.
+- [docs/cart-drawer.md](docs/cart-drawer.md): directional cart drawer design.
+- [docs/add-to-cart-theme-enhancement.md](docs/add-to-cart-theme-enhancement.md): directional product-card add-to-cart design.
+- [docs/theme-notifications.md](docs/theme-notifications.md): directional theme notification design.
+- [docs/git-branching.md](docs/git-branching.md): lightweight human branching guide.

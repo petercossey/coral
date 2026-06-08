@@ -46,6 +46,7 @@ Use state for current cart values. Use events for moments.
 Good event topics:
 
 - `cart:item-added`
+- `cart:item-add-failed`
 - `cart:item-updated`
 - `cart:item-removed`
 - `cart:refreshed`
@@ -55,7 +56,7 @@ Events should not be the source of truth for visible cart totals. A listener may
 
 ## Current Slice
 
-The product-card add-to-cart enhancement posts to the REST Storefront Cart API. On success it now replaces `cartSummary` with the returned cart object, then emits `cart:item-added`.
+The product-card add-to-cart enhancement posts to the REST Storefront Cart API. On success it replaces `cartSummary` with the returned cart object, then emits `cart:item-added`. On recoverable failure it emits `cart:item-add-failed` so feedback can stay outside the mutation module.
 
 The header cart enhancement subscribes to `cartSummary` and updates only its own count, subtotal, and accessible label. The cart drawer already reads the same state signal.
 

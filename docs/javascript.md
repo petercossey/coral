@@ -216,11 +216,17 @@ Rules:
 
 Use `assets/js/state/` when separate pieces of the theme need to coordinate without querying each other's DOM. Theme modules write through small state functions, client components read the exported signals, and state functions may emit native Coral events through `assets/js/events.js` when other modules need a loose subscription point.
 
-The search preview spike follows this pattern:
+The header search preview follows this pattern:
 
 - `assets/js/theme/header/header-search.js` enhances the server-rendered header search form on the homepage.
 - `assets/js/state/search-preview.js` owns `searchPreviewOpen` and `searchPreviewQuery`, and emits `coral:search-preview:activated`, `coral:search-preview:query-change`, and `coral:search-preview:closed`.
-- `assets/js/components/search-preview/search-preview.client.jsx` consumes those signals and renders placeholder preview content from a root outside the search form.
+- `assets/js/components/search-preview/search-preview.client.jsx` consumes those signals and renders from a root outside the search form.
+
+Notifications follow the same boundary:
+
+- Event producers such as add-to-cart theme modules emit moments.
+- `assets/js/theme/notifications/notifications.js` translates those moments into notification state.
+- `assets/js/components/notifications/notifications.client.jsx` renders the notification UI from shared state.
 
 ## Future Declarative Theme Modules
 

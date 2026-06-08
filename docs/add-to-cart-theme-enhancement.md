@@ -53,7 +53,7 @@ Keep existing analytics attributes if the template needs them, but do not use th
 - Do not handle product options, quantity controls, or full product forms in this pass.
 - Do not let the add-to-cart module update the cart drawer or header DOM directly.
 - Do not introduce Stencil Utils, GraphQL, a broad cart API abstraction, or a generic enhancement registry yet.
-- Do not add a full toast, alert, or inline error system yet.
+- Do not make add-to-cart own notification rendering.
 - Do not AJAX-enhance pre-order links yet; leave `pre_order_add_to_cart_url` anchors as normal links.
 
 ## Endpoint Decision
@@ -249,7 +249,7 @@ On a standard click:
 10. Parse the JSON response.
 11. On success, pass the cart response to shared cart state.
 12. Emit an event with the product ID, quantity, fallback URL, cart response, source type, and source element.
-13. On failure, log the error.
+13. On failure, log the error and emit a recoverable failure moment.
 14. Restore the link to its idle state.
 
 The eligibility check happens before `event.preventDefault()`. This keeps the enhancement narrow and avoids breaking unusual storefront links. The REST request happens only after the fallback URL has been proven to represent a normal direct add link.
@@ -287,6 +287,8 @@ This event is a notification that the initiating REST mutation completed. It can
 
 Future cart drawer or header modules can listen for the event when they need a moment notification, such as opening the drawer or showing feedback. Visible count and amount updates should render from `cartSummary`, not from the event payload.
 
+Failure handling can emit `cart:item-add-failed` after restoring the local interaction state. Notification modules may listen for that recoverable moment, but add-to-cart should not render notification UI directly.
+
 Theme-wide cart concerns for later phases:
 
 - A shared cart state module should own durable cart data such as ID, summary, line items, freshness, loading, and errors.
@@ -299,11 +301,11 @@ Theme-wide cart concerns for later phases:
 
 ## Error Handling
 
-For the first implementation, errors can go to the browser console. That includes request failures, unexpected response status values, JSON parse failures, and BigCommerce rejection cases.
+For this foundation, errors can go to the browser console and emit a recoverable failure event. That includes request failures, unexpected response status values, JSON parse failures, and BigCommerce rejection cases.
 
-If the REST request fails, restore the link to its idle state. A future pass can decide whether to navigate to the original `href`, show inline feedback, open a toast, refresh cart state and retry, or route the shopper to the product page.
+If the REST request fails, restore the link to its idle state. A future pass can decide whether to navigate to the original `href`, refresh cart state and retry, show richer error copy, or route the shopper to the product page.
 
-The REST response is structured, but this phase still does not add a shopper-facing error system. The implementation should not silently mark a failed add as successful. If the API returns validation details for stock limits or required options, log them for now and leave visible handling for a later UX pass.
+The REST response is structured, but the add-to-cart module should not silently mark a failed add as successful. If the API returns validation details for stock limits or required options, log them for now and leave richer visible handling for a later UX pass.
 
 ## Accessibility
 
@@ -314,7 +316,7 @@ The enhancement should keep accessibility work minimal:
 - Do not remove the `href`.
 - Preserve the link text.
 - Use `aria-busy` during submission.
-- Avoid injecting live regions until the theme has a real visible success/error pattern.
+- Leave live-region behavior to the shared notification layer.
 
 ## Open Questions For Later Phases
 
@@ -324,4 +326,4 @@ The enhancement should keep accessibility work minimal:
 - Should product forms use a Coral `FormData` implementation, Stencil Utils, or the REST Storefront Cart API?
 - Should the add-to-cart module retry through cart refresh if a known cart ID is stale?
 
-The stable decisions are the module location, template hook, `/cart.php?action=add` fallback behavior, REST Storefront Cart API enhanced mutation, shared cart state update, normal pre-order links, and the `cart:item-added` event topic.
+The stable decisions are the module location, template hook, `/cart.php?action=add` fallback behavior, REST Storefront Cart API enhanced mutation, shared cart state update, normal pre-order links, and the `cart:item-added` / `cart:item-add-failed` event topics.

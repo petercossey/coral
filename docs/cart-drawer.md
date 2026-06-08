@@ -4,7 +4,7 @@
 
 The cart drawer should give shoppers a fast cart summary without turning Coral into a client-rendered cart application. The drawer can render richer cart content over time, but the framework should keep server-rendered Handlebars as the baseline and use shared JavaScript state only where separate parts of the theme need to coordinate.
 
-This document records the intended direction before implementation.
+This document records the intended direction while the cart foundation is still evolving.
 
 ## Current Shape
 
@@ -35,9 +35,9 @@ The existing structure is the right foundation: server-rendered markup can trigg
 
 ## Data Ownership
 
-`assets/js/state/cart.js` should become the cart coordination module. The drawer should consume and request state transitions, but it should not own the cart data source.
+`assets/js/state/cart.js` is the cart coordination module. The drawer should consume and request state transitions, but it should not own the cart data source.
 
-Proposed public state and actions:
+Current and likely future state/actions:
 
 ```js
 export const cartDrawerOpen = signal(false);
@@ -66,7 +66,7 @@ Important constraints:
 - `window.Coral.context` only contains values explicitly passed through `{{inject}}`.
 - The header already renders `cart.quantity` and `cart.sub_total.formatted`.
 
-For the first implementation, prefer simple props on the cart drawer mount:
+Prefer simple props on the cart drawer mount:
 
 ```html
 <div
@@ -273,15 +273,16 @@ Possible future topics:
 
 Do not add these events until at least one non-state consumer needs them.
 
-## Implementation Plan
+## Directional Phases
 
 ### Phase 1: Static Summary From Server Seed
 
-- Add seed props to the drawer mount in `templates/layout/base.html`.
-- Expand `assets/js/state/cart.js` with `cartSummary` and `seedCartSummary()`.
-- Seed cart state from `cart-drawer.client.jsx` props during mount.
-- Render quantity, subtotal, empty state, and cart link in the drawer.
-- Keep item rows out of scope.
+Implemented foundation:
+
+- Seed props on the drawer mount in `templates/layout/base.html`.
+- Shared `cartSummary` and `seedCartSummary()` in `assets/js/state/cart.js`.
+- Drawer render from seeded quantity/subtotal state.
+- Header count/subtotal updates from the same cart state.
 
 ### Phase 2: Refresh On Open
 
