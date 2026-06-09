@@ -22,7 +22,7 @@ stencil bundle
 
 Local store config and credentials live in ignored `config.stencil.json` and `secrets.stencil.json`.
 
-## Developer Orientation
+## Developer Guide
 
 Coral is intentionally smaller than Cornerstone. Use Handlebars for page structure and initial data, then add JavaScript only where the storefront needs interaction.
 
