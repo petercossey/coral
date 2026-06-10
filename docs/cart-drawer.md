@@ -4,17 +4,18 @@
 
 The cart drawer should give shoppers a fast cart summary without turning Coral into a client-rendered cart application. The drawer can render richer cart content over time, but the framework should keep server-rendered Handlebars as the baseline and use shared JavaScript state only where separate parts of the theme need to coordinate.
 
-This document records the intended direction while the cart foundation is still evolving.
+This document records the drawer's design principles and the parts of the cart roadmap that are still ahead.
 
-## Current Shape
+## Architecture
 
 - `templates/layout/base.html` mounts the cart drawer with `data-coral-component="cart-drawer"` and a `data-cart-url` prop.
 - `templates/common/header.html` renders the header cart link from the Stencil `cart` object.
 - `assets/js/theme/header/header-cart.js` intercepts standard cart-link clicks, calls `openCartDrawer()`, and updates its own count/subtotal from shared cart state.
 - `assets/js/state/cart.js` owns `cartDrawerOpen`, the known cart ID, and a normalized `cartSummary`.
 - `assets/js/components/cart-drawer/cart-drawer.client.jsx` owns the drawer UI shell and renders the current cart summary.
+- `assets/js/theme/cart/add-to-cart.js` routes successful product-card mutations into the same shared state, and a successful add surfaces an "Open cart" notification action rather than auto-opening the drawer.
 
-The existing structure is the right foundation: server-rendered markup can trigger a Preact-owned leaf through shared state.
+This structure is the foundation: server-rendered markup triggers a Preact-owned leaf through shared state.
 
 ## Goals
 
@@ -37,18 +38,26 @@ The existing structure is the right foundation: server-rendered markup can trigg
 
 `assets/js/state/cart.js` is the cart coordination module. The drawer should consume and request state transitions, but it should not own the cart data source.
 
-Current and likely future state/actions:
+Existing state and actions:
 
 ```js
 export const cartDrawerOpen = signal(false);
 export const cartSummary = signal(null);
-export const cartStatus = signal('idle');
-export const cartError = signal(null);
 
 export function openCartDrawer() {}
 export function closeCartDrawer() {}
+export function getCurrentCartId() {}
+export function rememberCartId(cartId) {}
 export function seedCartSummary(summary) {}
 export function replaceCartSummary(summary, metadata) {}
+```
+
+Likely future additions for the refresh path:
+
+```js
+export const cartStatus = signal('idle');
+export const cartError = signal(null);
+
 export function markCartStale(reason) {}
 export function ensureCartFresh(options) {}
 ```
@@ -262,29 +271,33 @@ Near-term:
 
 Use state for current cart values. Use events for moments other modules may observe.
 
+Existing topics:
+
+- `cart:item-added`, consumed by the notifications theme module.
+- `cart:item-add-failed`, consumed by the notifications theme module.
+
 Possible future topics:
 
 - `cart:seeded`
 - `cart:refreshed`
 - `cart:stale`
-- `cart:item-added`
 - `cart:item-updated`
 - `cart:item-removed`
 
-Do not add these events until at least one non-state consumer needs them.
+Do not add a future event until at least one non-state consumer needs it.
 
-## Directional Phases
-
-### Phase 1: Static Summary From Server Seed
-
-Implemented foundation:
+## Implemented Foundation
 
 - Seed props on the drawer mount in `templates/layout/base.html`.
 - Shared `cartSummary` and `seedCartSummary()` in `assets/js/state/cart.js`.
 - Drawer render from seeded quantity/subtotal state.
 - Header count/subtotal updates from the same cart state.
+- Product-card add-to-cart routes successful responses into shared cart state and keeps the non-JavaScript link fallback.
+- Successful adds offer an "Open cart" notification action instead of auto-opening the drawer.
 
-### Phase 2: Refresh On Open
+## Roadmap
+
+### Refresh On Open
 
 - Add `ensureCartFresh()` to `assets/js/state/cart.js`.
 - Fetch `/api/storefront/carts` with `credentials: 'include'`.
@@ -292,14 +305,7 @@ Implemented foundation:
 - Render loading and error states in the drawer.
 - Keep known server seed visible while refresh is pending.
 
-### Phase 3: Cart-Aware Theme Interactions
-
-- Add product add-to-cart theme modules only when the relevant server-rendered markup exists.
-- Route successful add-to-cart responses into shared cart state.
-- Open the drawer on successful add when requested by markup.
-- Keep non-JavaScript form submission fallback.
-
-### Phase 4: Drawer Mutations
+### Drawer Mutations
 
 - Add quantity and remove controls to drawer item rows.
 - Use REST Storefront cart item endpoints.

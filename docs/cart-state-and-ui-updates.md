@@ -54,11 +54,11 @@ Good event topics:
 
 Events should not be the source of truth for visible cart totals. A listener may react to an event by opening the drawer or showing feedback, but count and amount rendering should come from normalized cart state.
 
-## Current Slice
+## Example: Add To Cart Flow
 
-The product-card add-to-cart enhancement posts to the REST Storefront Cart API. On success it replaces `cartSummary` with the returned cart object, then emits `cart:item-added`. On recoverable failure it emits `cart:item-add-failed` so feedback can stay outside the mutation module.
+The product-card add-to-cart enhancement posts to the REST Storefront Cart API. On success it replaces `cartSummary` with the returned cart object, then emits `cart:item-added`. On recoverable failure it emits `cart:item-add-failed` so feedback stays outside the mutation module.
 
-The header cart enhancement subscribes to `cartSummary` and updates only its own count, subtotal, and accessible label. The cart drawer already reads the same state signal.
+The header cart enhancement subscribes to `cartSummary` and updates only its own count, subtotal, and accessible label. The cart drawer reads the same state signal.
 
 ## Future Work
 

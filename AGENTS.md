@@ -10,7 +10,8 @@ Stencil is BigCommerce's theme engine for building hosted storefronts. Themes ar
 
 - Keep the starter theme minimal, contemporary, and easy to reason about.
 - Use Tailwind utilities in a bare-bones starter-kit style: prefer layout, spacing, type, borders, and simple responsive behavior over branded visual polish.
-- Avoid decorative gradients, heavy shadows, hover motion, transitions, animation, and highly opinionated color treatments unless a specific component genuinely needs them.
+- Keep default styling unopinionated: avoid decorative gradients, heavy shadows, hover flourishes, and branded color treatments.
+- Use motion only when it communicates state, such as the cart drawer opening or cart count feedback, and respect `prefers-reduced-motion`.
 - Prefer server-rendered Handlebars as the baseline and add JavaScript only when an interaction needs it.
 - When interactive widgets are introduced, prefer small Preact client components at isolated leaves.
 - Use plain theme setup modules for JavaScript that enhances server-rendered DOM.
@@ -51,6 +52,13 @@ Use the globally installed `stencil` command for local validation. Do not run th
 - Prefer native browser APIs and platform features before adding client-side packages.
 - Keep generated or bundled artifacts out of source unless the project intentionally adopts them.
 - Update this file when validation rules or architecture decisions become real project conventions.
+
+## Docs
+
+- Docs state principles and implemented behavior in present tense; they are conventions, not proposals.
+- When a change implements or alters a documented design, update the doc in the same change.
+- Keep future or not-yet-implemented work in a concise section at the end of the doc, such as Roadmap or Future Work; do not add status sections that need maintenance as features land.
+- Give each convention one home and link to it instead of restating it.
 
 ## Template Layout
 

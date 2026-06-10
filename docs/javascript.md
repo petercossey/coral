@@ -71,6 +71,8 @@ Grow this only when real pages or repeated interactions need it.
 
 Use client components for isolated UI leaves that Preact should own. Preact implementations live in `assets/js/components/<name>/`. The mount root is ordinary template markup: write simple roots inline where they are rendered, and create a Handlebars partial only when the mount markup has meaningful template logic, reuse, or more structure than a local root element.
 
+A minimal client component looks like this (illustrative example, not a shipped component):
+
 Markup:
 
 ```html
@@ -228,49 +230,6 @@ Notifications follow the same boundary:
 - `assets/js/theme/notifications/notifications.js` translates those moments into notification state.
 - `assets/js/components/notifications/notifications.client.jsx` renders the notification UI from shared state.
 
-## Future Declarative Theme Modules
-
-A future Coral version may add declarative Theme Modules for repeated element-level behaviors. This would let templates declare the behavior they need while the runtime lazy-loads only matching modules.
-
-Potential markup:
-
-```html
-<form
-  action="/cart/add"
-  method="post"
-  data-coral-module="cart.add"
-  data-cart-open-on-success
->
-  ...
-</form>
-```
-
-Potential module contract:
-
-```js
-export default function cartAddModule(element, env) {
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    // Submit and update shared cart state.
-  };
-
-  element.addEventListener('submit', handleSubmit);
-
-  return () => {
-    element.removeEventListener('submit', handleSubmit);
-  };
-}
-```
-
-Do not implement this as a generic registry until there are enough repeated behaviors to justify the extra runtime. If Coral adopts it, the implementation should:
-
-- Use the namespaced `data-coral-module` attribute, not a generic `data-module` attribute.
-- Pass the same page environment used by components and explicit theme setup.
-- Deduplicate booting for already-mounted elements.
-- Require cleanup functions for modules that attach listeners or observers.
-- Support subtree mounting and unmounting for dynamically inserted server-rendered fragments.
-- Keep page-level orchestration in `assets/js/theme/boot.js` when behavior is truly page-wide.
-
 ## Shared State
 
 Use `@preact/signals` when separate roots or theme modules need the same current value.
@@ -311,7 +270,7 @@ The helper owns the DOM namespace and dispatches full browser event names such a
 
 Use shared state for current values such as whether the cart drawer is open. Use events when a module needs to announce that something happened and zero or more other modules may react.
 
-## Current Cart Example
+## Example: Cart Coordination
 
 The header cart link is server-rendered markup with a normal `href` fallback. Its theme module intercepts only standard clicks when the cart drawer component exists, then calls `openCartDrawer()` from shared cart state.
 
@@ -341,5 +300,9 @@ Keep these decisions open until real features need them:
 - JSON prop helpers for complex client component data.
 - Automatic component registration with `import.meta.glob()`.
 - Dynamic fragment mounting policy.
+
+### Declarative Theme Modules
+
+A future Coral version may let templates declare repeated element-level behaviors with a namespaced `data-coral-module="<name>"` attribute, with the runtime lazy-loading only matching modules. Do not implement this as a generic registry until enough repeated behaviors justify the extra runtime. If adopted, modules must receive the same page environment as components and theme setup, deduplicate booting, return cleanup functions when they attach listeners, and support subtree mounting for dynamically inserted fragments.
 
 Do not add Stimulus, Alpine, htmx, Turbo, a global enhancement registry, or a PageManager clone in the first pass.

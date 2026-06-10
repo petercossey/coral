@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Coral should include a small notification layer for theme moments such as AJAX add-to-cart success, recoverable errors, and cart actions.
+Coral includes a small notification layer for theme moments such as AJAX add-to-cart success, recoverable errors, and cart actions.
 
-Start with a Coral-native toast container, not a floating-positioning dependency. Fixed viewport toasts do not need Floating UI; reserve Floating UI for future anchored overlays such as tooltips, menus, and button-attached popovers.
+The toast container is Coral-native, not a floating-positioning dependency. Fixed viewport toasts do not need Floating UI; reserve Floating UI for future anchored overlays such as tooltips, menus, and button-attached popovers.
 
 ## Direction
 

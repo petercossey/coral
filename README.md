@@ -59,7 +59,7 @@ templates/
 
 docs/
   javascript.md             Client component and theme module conventions
-  *.md                      Directional feature and workflow notes
+  *.md                      Feature design notes and workflow guides
 ```
 
 The storefront references built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`. Do not use Stencil's `{{stylesheet}}` helper for Coral's main CSS.
@@ -73,11 +73,15 @@ Page templates define a `page` block and then render either `{{> layout/base}}` 
 - `stencil start` runs the local storefront.
 - `stencil bundle` validates and packages the theme.
 
+## Internationalization
+
+Coral does not yet have a consistent internationalization approach. Storefront copy is hardcoded in templates and JavaScript, money fallbacks assume `$0.00`, and `lang/en.json` is minimal. A consistent `{{lang}}` and currency strategy is still to be tackled.
+
 ## Docs
 
 - [docs/javascript.md](docs/javascript.md): stable JavaScript conventions for components, theme modules, state, and events.
-- [docs/cart-state-and-ui-updates.md](docs/cart-state-and-ui-updates.md): directional cart state boundaries.
-- [docs/cart-drawer.md](docs/cart-drawer.md): directional cart drawer design.
-- [docs/add-to-cart-theme-enhancement.md](docs/add-to-cart-theme-enhancement.md): directional product-card add-to-cart design.
-- [docs/theme-notifications.md](docs/theme-notifications.md): directional theme notification design.
+- [docs/cart-state-and-ui-updates.md](docs/cart-state-and-ui-updates.md): cart state boundaries and update patterns.
+- [docs/cart-drawer.md](docs/cart-drawer.md): cart drawer design and roadmap.
+- [docs/add-to-cart-theme-enhancement.md](docs/add-to-cart-theme-enhancement.md): product-card add-to-cart enhancement design.
+- [docs/theme-notifications.md](docs/theme-notifications.md): theme notification design.
 - [docs/git-branching.md](docs/git-branching.md): lightweight human branching guide.

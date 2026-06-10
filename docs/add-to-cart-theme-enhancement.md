@@ -6,23 +6,9 @@ Product cards already render server-side add-to-cart links. This feature should 
 
 This is a Coral theme module, not a Preact component. The markup remains Handlebars-owned, and the JavaScript only intercepts eligible clicks.
 
-## Current Markup
+## Markup Hook
 
-Featured product cards currently render add-to-cart anchors like this:
-
-```html
-<a
-  class="inline-flex shrink-0 items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium"
-  href="/cart.php?action=add&amp;product_id=107"
-  data-event-type="product-click"
-  data-button-type="add-cart"
-  data-product-id="107"
->
-  Add to cart
-</a>
-```
-
-The enhancement should use a Coral-specific hook rather than relying on classes or BigCommerce analytics-style attributes:
+Product cards render add-to-cart anchors with a Coral-specific hook:
 
 ```html
 <a
@@ -34,7 +20,7 @@ The enhancement should use a Coral-specific hook rather than relying on classes 
 </a>
 ```
 
-Keep existing analytics attributes if the template needs them, but do not use them as the enhancement boundary.
+The hook is the enhancement boundary, not classes or BigCommerce analytics-style attributes. Keep analytics attributes such as `data-event-type` if the template needs them, but do not enhance from them.
 
 ## Goals
 
@@ -135,19 +121,18 @@ Useful existing Stencil context:
 
 - `{{cart_id}}` is a global cart identifier when a cart exists.
 - `cart: true` in page front matter tells Stencil to retrieve cart data for that page.
-- The current base layout seeds narrow cart drawer props with `data-cart-id`, `data-cart-quantity`, and `data-cart-subtotal`.
-- `assets/js/state/cart.js` owns shared cart state and should be the eventual place to read or replace the known cart summary.
+- The base layout seeds narrow cart drawer props with `data-cart-id`, `data-cart-quantity`, and `data-cart-subtotal`.
+- `assets/js/state/cart.js` owns shared cart state, the known cart ID, and cart summary replacement.
 
-First pass cart ID policy:
+Cart ID policy:
 
-1. Prefer a cart ID already seeded into Coral cart state.
-2. If the state module does not yet expose a current cart ID, add the smallest state helper needed rather than querying unrelated DOM from the add-to-cart module.
-3. If no cart ID is known, call `POST /api/storefront/carts` with the line item.
-4. If a known cart ID add fails because the cart no longer exists or is stale, log the error in this pass. A later cart coordinator can refresh with `GET /api/storefront/carts`, clear stale state, and retry when the UX requires it.
+1. Read the known cart ID from cart state with `getCurrentCartId()` rather than querying unrelated DOM.
+2. If no cart ID is known, call `POST /api/storefront/carts` with the line item.
+3. If a known cart ID add fails because the cart no longer exists or is stale, the error is logged and a recoverable failure moment is emitted. A later cart coordinator can refresh with `GET /api/storefront/carts`, clear stale state, and retry when the UX requires it.
 
-The REST mutation response returns structured cart JSON. The add-to-cart module should pass that response to shared cart state before emitting any success event. Shared state owns normalization and durable state replacement; the module should not update header, drawer, or other cart UI directly.
+The REST mutation response returns structured cart JSON. The add-to-cart module passes that response to shared cart state before emitting any success event. Shared state owns normalization and durable state replacement; the module does not update header, drawer, or other cart UI directly.
 
-The current implementation calls `replaceCartSummary(cart, { source: 'rest-storefront' })` when the REST response returns a complete cart object. That lets the header cart link and cart drawer render from the same `cartSummary` signal.
+The module calls `replaceCartSummary(cart, { source: 'rest-storefront' })` when the REST response returns a complete cart object. That lets the header cart link and cart drawer render from the same `cartSummary` signal.
 
 ## Stencil Utils Research
 
@@ -211,46 +196,46 @@ The Storefront GraphQL API is also out of scope for this first pass. It can muta
 
 ## Module Shape
 
-The module should follow the JavaScript guide's theme module pattern:
+The module follows the JavaScript guide's theme module pattern:
 
 ```text
 assets/js/theme/cart/add-to-cart.js
 ```
 
-Export a setup function:
+It exports a setup function:
 
 ```js
 export function setupAddToCartButtons({ root = document } = {}) {}
 ```
 
-`assets/js/theme/global.js` can import and call the setup function when the feature is implemented. That keeps add-to-cart behavior globally available for product cards on home, category, search, and other listing pages.
+`assets/js/theme/global.js` imports and calls the setup function, keeping add-to-cart behavior globally available for product cards on home, category, search, and other listing pages.
 
-The setup should query only:
+The setup queries only:
 
 ```js
 const selector = 'a[data-coral-add-to-cart]';
 ```
 
-It should ignore non-standard clicks so browser behavior remains intact for new tabs, copy link, keyboard/browser modifiers, and similar interactions.
+It ignores non-standard clicks so browser behavior remains intact for new tabs, copy link, keyboard/browser modifiers, and similar interactions.
 
-## First-Pass Behavior
+## Behavior
 
-On a standard click:
+On a standard click, the module:
 
-1. Validate that the link has a valid numeric product ID and an eligible same-origin `/cart.php?action=add` fallback URL.
-2. If the link is not eligible, allow normal navigation.
-3. Prevent normal navigation.
-4. If the link is already busy, return.
-5. Mark the link busy.
-6. Read the known cart ID from Coral cart state if available.
-7. If a cart ID exists, request `POST /api/storefront/carts/{cartId}/items`.
-8. If no cart ID exists, request `POST /api/storefront/carts`.
-9. If the response is not OK, throw an error.
-10. Parse the JSON response.
-11. On success, pass the cart response to shared cart state.
-12. Emit an event with the product ID, quantity, fallback URL, cart response, source type, and source element.
-13. On failure, log the error and emit a recoverable failure moment.
-14. Restore the link to its idle state.
+1. Validates that the link has a valid numeric product ID and an eligible same-origin `/cart.php?action=add` fallback URL.
+2. If the link is not eligible, allows normal navigation.
+3. Prevents normal navigation.
+4. If the link is already busy, returns.
+5. Marks the link busy with a temporary busy label.
+6. Reads the known cart ID from Coral cart state if available.
+7. If a cart ID exists, requests `POST /api/storefront/carts/{cartId}/items`.
+8. If no cart ID exists, requests `POST /api/storefront/carts`.
+9. If the response is not OK, throws an error.
+10. Parses the JSON response.
+11. On success, passes the cart response to shared cart state.
+12. Emits an event with the product ID, quantity, fallback URL, cart response, source type, and source element.
+13. On failure, logs the error and emits a recoverable failure moment.
+14. Restores the link to its idle state and original label.
 
 The eligibility check happens before `event.preventDefault()`. This keeps the enhancement narrow and avoids breaking unusual storefront links. The REST request happens only after the fallback URL has been proven to represent a normal direct add link.
 
@@ -258,10 +243,9 @@ The eligibility check happens before `event.preventDefault()`. This keeps the en
 
 Keep state small and local to the element:
 
-- Store a busy marker with `data-coral-busy="true"` or a private `WeakSet`.
-- Set `aria-busy="true"` while submitting.
-- Consider disabling repeated activation by setting `aria-disabled="true"` during the request.
-- Preserve the original text unless a later design adds a real loading or success label.
+- Store a busy marker with `data-coral-busy="true"`.
+- Set `aria-busy="true"` and `aria-disabled="true"` while submitting.
+- Swap the link text to a busy label such as "Adding..." during the request, and restore the original text afterwards.
 
 Because the source element is an anchor, avoid pretending it is a disabled form button. The important first-pass behavior is duplicate-click prevention and clear internal state.
 
@@ -285,9 +269,9 @@ emit('cart:item-added', {
 
 This event is a notification that the initiating REST mutation completed. It can include the structured cart JSON returned by the Storefront Cart API, but shared cart state owns normalization and durable state replacement. Emit the event after the state update so event listeners see current cart state when they run. Do not include raw fallback URL response HTML because the enhanced path should not fetch `/cart.php`.
 
-Future cart drawer or header modules can listen for the event when they need a moment notification, such as opening the drawer or showing feedback. Visible count and amount updates should render from `cartSummary`, not from the event payload.
+The notifications theme module listens for these moments and enqueues shopper feedback, including an "Open cart" action on success. Visible count and amount updates render from `cartSummary`, not from the event payload.
 
-Failure handling can emit `cart:item-add-failed` after restoring the local interaction state. Notification modules may listen for that recoverable moment, but add-to-cart should not render notification UI directly.
+Failure handling emits `cart:item-add-failed` after restoring the local interaction state. Notification modules listen for that recoverable moment; add-to-cart does not render notification UI directly.
 
 Theme-wide cart concerns for later phases:
 
