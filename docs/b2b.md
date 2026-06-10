@@ -40,7 +40,7 @@ Purely cosmetic; no auth involvement. It hides the `body` on account/login pages
 
 The cart-hiding style is a pre-load safety measure. After boot, the SPA checks the logged-in user's permissions and removes the style unless the user is a B2B account without `purchase_enable` permission.
 
-Coral does not adopt either pattern. Native B2B account pages, when built, are routed explicitly through templates rather than hidden-and-replaced. Cart and add-to-cart gating uses Coral-owned `data-*` hooks and a permission-aware theme module (see Roadmap).
+Coral does not adopt either pattern. Native account and B2B account pages are routed explicitly through templates rather than hidden-and-replaced. Cart and add-to-cart gating uses Coral-owned `data-*` hooks and a permission-aware theme module (see Roadmap).
 
 ### Default footer script
 
@@ -319,7 +319,7 @@ Client-side permission checks are UX controls. The B2B API remains the source of
 
 ### First implementation slice
 
-A minimal end-to-end spike to validate the design against a sandbox store with B2B Edition enabled (default scripts disabled per the setup requirement). The slice ships no user-facing UI; B2B account-page features wait until Coral has an account-page template strategy.
+A minimal end-to-end spike to validate the design against a sandbox store with B2B Edition enabled (default scripts disabled per the setup requirement). The slice ships no user-facing UI; B2B account-page features build on Coral's native auth/account templates as those workflows are introduced.
 
 1. `config.js`, `auth.js`, and `client.js` with the exchange and 40101 retry.
 2. One read-only domain call (for example `customerInfo` or `customerOrders`) exercised through a dev-only diagnostic — the browser console or a temporary harness, not a shipped page — confirming the token exchange, the permission payload, the customer-keyed cache, and the 40101 retry path.
@@ -332,4 +332,4 @@ In rough order, each landing only after the previous layer is stable:
 1. **Purchasability.** Permission-aware cart/add-to-cart gating in `assets/js/theme/b2b/purchasing.js` using `purchase_enable` and Coral `data-*` hooks — the theme-owned replacement for the default header script's `removeCart()`. Keep server-rendered add-to-cart as the fallback; avoid showing controls during auth that may be immediately disabled; show controls for guests, B2C customers, and permitted B2B users.
 2. **Product pricing.** A `priceProducts` domain module to refresh product-page pricing for the selected variant/options, falling back to server-rendered Stencil pricing when unavailable. Product-card pricing can follow if templates expose enough variant data.
 3. **Quote and shopping list leaves.** Preact components for add-to-quote and add-to-shopping-list interactions, gated by B2B permissions before mounting. Account dashboards stay out of scope.
-4. **Account workflows.** Invoices, orders, addresses, company users, and account settings, one workflow at a time, after Coral has a clear B2B account-page template strategy. A read-only company orders list (`allOrders` / `customerOrders`) is the natural first workflow once that strategy exists. Custom B2B login/registration (the `login` mutation and `storefrontLoginToken` sync) only if Coral decides to own those pages.
+4. **Account workflows.** Invoices, orders, addresses, company users, and account settings, one workflow at a time, after Coral's native auth/account templates have the routes each workflow needs. A read-only company orders list (`allOrders` / `customerOrders`) is the natural first workflow. Custom B2B login/registration (the `login` mutation and `storefrontLoginToken` sync) only if Coral decides to own those pages beyond Stencil's standard login flow.

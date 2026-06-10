@@ -1,0 +1,78 @@
+---
+cart: true
+---
+{{#partial "page"}}
+    <section class="mx-auto flex w-full max-w-4xl flex-col gap-8" aria-labelledby="account-login-heading">
+        <header class="flex flex-col gap-3">
+            <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">Account</p>
+            <h1 class="text-3xl font-semibold leading-tight" id="account-login-heading">Sign in</h1>
+            <p class="max-w-2xl text-sm leading-6 text-slate-700">
+                Sign in to view orders, manage saved addresses, and keep account details up to date.
+            </p>
+        </header>
+
+        {{#if forms.login.error}}
+            <div class="border border-red-300 bg-white p-4 text-sm leading-6 text-red-800" role="alert">
+                {{{forms.login.error}}}
+            </div>
+        {{/if}}
+
+        {{#if forms.login.success}}
+            <div class="border border-emerald-300 bg-white p-4 text-sm leading-6 text-emerald-800" role="status">
+                {{{forms.login.success}}}
+            </div>
+        {{/if}}
+
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <form class="flex flex-col gap-5 border border-slate-300 bg-white p-5" action="{{urls.auth.check_login}}" method="post">
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium" for="login_email">Email address</label>
+                    <input
+                        class="w-full border border-slate-300 px-3 py-2 text-base"
+                        id="login_email"
+                        name="login_email"
+                        type="email"
+                        autocomplete="email"
+                        required>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-medium" for="login_pass">Password</label>
+                    <input
+                        class="w-full border border-slate-300 px-3 py-2 text-base"
+                        id="login_pass"
+                        name="login_pass"
+                        type="password"
+                        autocomplete="current-password"
+                        required>
+                </div>
+
+                {{{forms.login.recaptcha.markup}}}
+
+                <div class="flex flex-col gap-4 pt-1 sm:flex-row sm:items-center">
+                    <button class="inline-flex items-center justify-center border border-slate-950 bg-slate-950 px-5 py-3 text-sm font-medium text-white" type="submit">
+                        Sign in
+                    </button>
+                    <a class="text-sm font-medium text-slate-950 underline underline-offset-4" href="{{urls.auth.forgot_password}}">
+                        Forgot password?
+                    </a>
+                </div>
+            </form>
+
+            {{#if settings.account_creation_enabled}}
+                <aside class="flex flex-col gap-4 border border-slate-300 bg-white p-5">
+                    <div class="flex flex-col gap-2">
+                        <h2 class="text-xl font-semibold">New customer</h2>
+                        <p class="text-sm leading-6 text-slate-700">
+                            Create an account to save shipping details and review order history.
+                        </p>
+                    </div>
+                    <a class="inline-flex items-center justify-center border border-slate-950 px-5 py-3 text-sm font-medium" href="{{urls.auth.create_account}}">
+                        Create account
+                    </a>
+                </aside>
+            {{/if}}
+        </div>
+    </section>
+{{/partial}}
+{{> layout/base}}
