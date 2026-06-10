@@ -6,8 +6,15 @@ Coral keeps storefront rendering in Stencil and Handlebars, uses Vite for the CS
 
 ## Quick Start
 
+Coral is a Stencil theme, so local development needs Stencil CLI connected to a BigCommerce store. One-time setup:
+
+1. Install [Stencil CLI](https://developer.bigcommerce.com/docs/storefront/stencil/cli/install) on a supported Node.js version: `npm install -g @bigcommerce/stencil-cli`.
+2. Create a [Stencil-CLI API token](https://developer.bigcommerce.com/docs/storefront/stencil/cli/development-server#creating-stencil-api-credentials) in your store's control panel. Any store works, including a trial or sandbox store.
+3. In this directory, run `npm install`, then `stencil init` with your store URL and access token. This writes local store config and credentials into the git-ignored `config.stencil.json` and `secrets.stencil.json`.
+
+Then run the storefront:
+
 ```sh
-npm install
 npm run build
 stencil start
 ```
@@ -20,7 +27,7 @@ To validate and package the theme:
 stencil bundle
 ```
 
-Local store config and credentials live in ignored `config.stencil.json` and `secrets.stencil.json`.
+New to Stencil? Read [docs/stencil-primer.md](docs/stencil-primer.md) for how templates, data, and page types work in Coral.
 
 ## Developer Guide
 
@@ -58,6 +65,7 @@ templates/
   components/               Reusable feature partials
 
 docs/
+  stencil-primer.md         Stencil orientation for developers new to BigCommerce
   javascript.md             Client component and theme module conventions
   *.md                      Feature design notes and workflow guides
 ```
@@ -79,6 +87,7 @@ Coral does not yet have a consistent internationalization approach. Storefront c
 
 ## Docs
 
+- [docs/stencil-primer.md](docs/stencil-primer.md): Stencil orientation for developers new to BigCommerce.
 - [docs/javascript.md](docs/javascript.md): stable JavaScript conventions for components, theme modules, state, and events.
 - [docs/cart-state-and-ui-updates.md](docs/cart-state-and-ui-updates.md): cart state boundaries and update patterns.
 - [docs/cart-drawer.md](docs/cart-drawer.md): cart drawer design and roadmap.
