@@ -39,7 +39,7 @@ Shared page context flows from templates into `window.Coral`, through `assets/js
 
 If you are used to Cornerstone, the useful mental model is still global setup plus optional page setup, but Coral avoids the PageManager class, jQuery plugin patterns, and broad folder structures until real use justifies them.
 
-For the detailed JavaScript conventions, see [docs/javascript.md](docs/javascript.md).
+To build your first feature, follow [docs/building-a-feature.md](docs/building-a-feature.md). For the detailed JavaScript conventions, see [docs/javascript.md](docs/javascript.md).
 
 ## Project Layout
 
@@ -66,13 +66,14 @@ templates/
 
 docs/
   stencil-primer.md         Stencil orientation for developers new to BigCommerce
+  building-a-feature.md     Task-oriented guide to adding a feature
   javascript.md             Client component and theme module conventions
   *.md                      Feature design notes and workflow guides
 ```
 
 The storefront references built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`. Do not use Stencil's `{{stylesheet}}` helper for Coral's main CSS.
 
-Page templates define a `page` block and then render either `{{> layout/base}}` for normal storefront chrome or `{{> layout/empty}}` for chrome-free system pages such as checkout. Shared structural regions such as the site header, body wrapper, and footer live in `templates/common/`; `templates/components/` is reserved for reusable feature-specific Handlebars partials. Create a mount partial there only when the mount markup has meaningful template logic, reuse, or more structure than a local root element.
+Page templates define a `page` block and then render either `{{> layout/base}}` for normal storefront chrome or `{{> layout/empty}}` for chrome-free system pages such as checkout. Shared structural regions such as the site header, body wrapper, and footer live in `templates/common/`; `templates/components/` is reserved for reusable feature-specific Handlebars partials. The client component rules in [docs/javascript.md](docs/javascript.md) cover when a component mount partial is justified.
 
 ## Commands
 
@@ -87,10 +88,16 @@ Coral does not yet have a consistent internationalization approach. Storefront c
 
 ## Docs
 
+Guides and conventions:
+
 - [docs/stencil-primer.md](docs/stencil-primer.md): Stencil orientation for developers new to BigCommerce.
+- [docs/building-a-feature.md](docs/building-a-feature.md): task-oriented guide to adding a feature.
 - [docs/javascript.md](docs/javascript.md): stable JavaScript conventions for components, theme modules, state, and events.
+- [docs/git-branching.md](docs/git-branching.md): lightweight human branching guide.
+
+Feature design notes, describing implemented behavior with remaining work at the end of each doc:
+
 - [docs/cart-state-and-ui-updates.md](docs/cart-state-and-ui-updates.md): cart state boundaries and update patterns.
 - [docs/cart-drawer.md](docs/cart-drawer.md): cart drawer design and roadmap.
 - [docs/add-to-cart-theme-enhancement.md](docs/add-to-cart-theme-enhancement.md): product-card add-to-cart enhancement design.
 - [docs/theme-notifications.md](docs/theme-notifications.md): theme notification design.
-- [docs/git-branching.md](docs/git-branching.md): lightweight human branching guide.

@@ -69,7 +69,7 @@ Grow this only when real pages or repeated interactions need it.
 
 ## Client Components
 
-Use client components for isolated UI leaves that Preact should own. Preact implementations live in `assets/js/components/<name>/`. The mount root is ordinary template markup: write simple roots inline where they are rendered, and create a Handlebars partial only when the mount markup has meaningful template logic, reuse, or more structure than a local root element.
+Use client components for isolated UI leaves that Preact should own. Preact implementations live in `assets/js/components/<name>/`. The mount root is ordinary template markup written inline where it is rendered; the rules below cover when a mount partial is justified.
 
 A minimal client component looks like this (illustrative example, not a shipped component):
 
@@ -214,25 +214,11 @@ Rules:
 - Keep page setup explicit; do not add a global enhancement registry or generic `data-coral-enhancement` marker yet.
 - Do not introduce a PageManager class unless repeated real use proves it would simplify the theme.
 
-## Shared State And Events
+## Shared State
 
 Use `assets/js/state/` when separate pieces of the theme need to coordinate without querying each other's DOM. Theme modules write through small state functions, client components read the exported signals, and state functions may emit native Coral events through `assets/js/events.js` when other modules need a loose subscription point.
 
-The header search preview follows this pattern:
-
-- `assets/js/theme/header/header-search.js` enhances the server-rendered header search form on the homepage.
-- `assets/js/state/search-preview.js` owns `searchPreviewOpen` and `searchPreviewQuery`, and emits `coral:search-preview:activated`, `coral:search-preview:query-change`, and `coral:search-preview:closed`.
-- `assets/js/components/search-preview/search-preview.client.jsx` consumes those signals and renders from a root outside the search form.
-
-Notifications follow the same boundary:
-
-- Event producers such as add-to-cart theme modules emit moments.
-- `assets/js/theme/notifications/notifications.js` translates those moments into notification state.
-- `assets/js/components/notifications/notifications.client.jsx` renders the notification UI from shared state.
-
-## Shared State
-
-Use `@preact/signals` when separate roots or theme modules need the same current value.
+State modules use `@preact/signals`:
 
 ```js
 import { signal } from '@preact/signals';
@@ -254,6 +240,18 @@ Rules:
 - Use module-level `signal()` for state shared by separate client roots or theme modules.
 - Export named actions for state transitions that have meaning.
 - Do not add a broader app-state library until Coral has app-like complexity.
+
+The header search preview follows this pattern:
+
+- `assets/js/theme/header/header-search.js` enhances the server-rendered header search form on the homepage.
+- `assets/js/state/search-preview.js` owns `searchPreviewOpen` and `searchPreviewQuery`, and emits `coral:search-preview:activated`, `coral:search-preview:query-change`, and `coral:search-preview:closed`.
+- `assets/js/components/search-preview/search-preview.client.jsx` consumes those signals and renders from a root outside the search form.
+
+Notifications follow the same boundary:
+
+- Event producers such as add-to-cart theme modules emit moments.
+- `assets/js/theme/notifications/notifications.js` translates those moments into notification state.
+- `assets/js/components/notifications/notifications.client.jsx` renders the notification UI from shared state.
 
 ## Events
 
