@@ -30,6 +30,15 @@
         window.Coral = window.Coral || {};
         window.Coral.pageType = '{{page_type}}';
         window.Coral.context = JSON.parse({{jsContext}});
+        window.Coral.b2b = {
+            enabled: {{#if theme_settings.b2b_enabled}}true{{else}}false{{/if}},
+            storeHash: '{{settings.store_hash}}',
+            channelId: Number('{{settings.channel_id}}') || 1,
+            customerId: Number('{{customer.id}}') || null,
+            environment: '{{theme_settings.b2b_environment}}',
+            apiBaseUrl: '{{theme_settings.b2b_api_base_url}}',
+            appClientId: '{{theme_settings.b2b_client_id}}'
+        };
         </script>
     <script nonce="{{nonce}}" type="module" src="{{cdn 'assets/dist/app.js'}}"></script>
     {{{footer.scripts}}}

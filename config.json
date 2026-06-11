@@ -15,5 +15,10 @@
       }
     }
   ],
-  "settings": {}
+  "settings": {
+    "b2b_enabled": false,
+    "b2b_environment": "production",
+    "b2b_api_base_url": "https://api-b2b.bigcommerce.com",
+    "b2b_client_id": "dl7c39mdpul6hyc489yk0vzxl6jesyx"
+  }
 }

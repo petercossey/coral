@@ -89,8 +89,9 @@ The shopper's existing storefront session cookie authenticates a same-origin req
 GET {window.origin}/customer/current.jwt?app_client_id={clientId}
 ```
 
-- Returns a short-lived (about 15 minutes) signed JWT identifying the current customer, as plain text.
+- Returns a short-lived (about 15 minutes) signed JWT identifying the current customer. The default response is the JWT as plain text; with `Accept: application/json` it is `{ "token": "<jwt>" }`, and errors become structured `{ "errors": [{ "detail": "…" }] }` responses. Coral requests the JSON variant (see Local Development below).
 - Requires a logged-in customer session; returns an error otherwise.
+- BigCommerce reuses the same JWT for repeat calls within its lifetime rather than minting one per request (observed).
 - `app_client_id` must be a client ID registered for the Current Customer API. The B2B module's production ID is `dl7c39mdpul6hyc489yk0vzxl6jesyx`.
 - Buyer Portal reference: `apps/storefront/src/shared/service/bc/api/login.ts`.
 
@@ -137,7 +138,7 @@ Buyer Portal reference: `apps/storefront/src/shared/service/request/b3Fetch.ts` 
 
 - The B2B token is user-scoped and permission-scoped, and expires after about 1 day. The response does not include an expiry.
 - The Buyer Portal caches tokens in `sessionStorage` and re-runs the exchange whenever a freshly fetched customer JWT differs from the cached one — this is how login, logout, and user-switching are detected (`apps/storefront/src/utils/loginInfo.ts`).
-- There is **no refresh flow**. A GraphQL error with `extensions.code === 40101` means the token is invalid or expired. Coral treats 40101 as: invalidate the cache, re-run the exchange once, then fail.
+- There is **no refresh flow**. A GraphQL error with `extensions.code === 40101` means the token is invalid or expired. A structurally invalid token returns a `JWT verification failed` error with no `extensions` at all (observed against the live API), so `client.js` treats either shape as an auth failure: invalidate the cache, re-run the exchange once, then fail.
 
 ### Related token types
 
@@ -176,7 +177,7 @@ The portal's request layer is React-free. Its only entanglements are Redux for t
 
 ## Coral Mini-SDK
 
-A small theme-owned module set, following the JavaScript conventions in `docs/javascript.md`.
+A small theme-owned module set, following the JavaScript conventions in `docs/javascript.md`. The SDK covers auth, the request layer, and one read-only domain call (`customerOrders`); it ships no user-facing UI. B2B account-page features build on Coral's native auth/account templates as those workflows are introduced.
 
 ### Layout
 
@@ -186,6 +187,7 @@ assets/js/b2b/
   auth.js       Token manager: returns a valid B2B token, owns caching and the exchange.
   client.js     gqlRequest(query, variables) — fetch wrapper with auth and error unwrapping.
   orders.js     Domain modules added one at a time as Coral features need them.
+  diagnostic.js Dev-only console diagnostic; not referenced by templates or the Vite build.
 ```
 
 Domain modules hold only the operations Coral features actually use — do not port the portal's full API surface up front.
@@ -246,7 +248,31 @@ B2B features follow the existing two-model split:
 - **Preact client components** own interactive B2B leaves (for example, a company orders table), mounted from normal Handlebars markup with `data-coral-component`.
 - Shared B2B state, if a feature needs it, lives in `assets/js/state/` as signals; the SDK itself stays stateless apart from the token cache. A future shared state shape, if adopted, tracks `status` (`idle | loading | ready | guest | error`), `permissions`, `customer`, `company`, and `error`.
 
-The SDK is lazy: features call `getB2BToken()` on demand rather than authorizing on every page load. There is no global B2B boot step until a feature proves one is needed.
+The SDK is lazy: features call `getB2BToken()` on demand rather than authorizing on every page load. There is no global B2B boot step until a feature proves one is needed. `assets/js/app.js` imports nothing from `assets/js/b2b/`; the SDK enters the bundle only when a feature module imports it.
+
+### Dev diagnostic
+
+`assets/js/b2b/diagnostic.js` exercises the full chain — config, token exchange, permission payload, the customer-keyed cache, the `customerOrders` query, and the auth-failure retry path. It is not referenced by any template and is not a Vite entry; the Stencil dev server serves theme assets as-is, so it loads directly from source in the browser console on a logged-in page:
+
+```js
+await import('/assets/js/b2b/diagnostic.js');
+await CoralB2BDiagnostic.run();
+```
+
+It logs `PASS`/`FAIL` per step and returns `true` when every step passes.
+
+## Local Development with Stencil CLI
+
+The whole flow works through the `stencil start` dev server (validated end-to-end against a B2B sandbox):
+
+- Login and customer sessions work through the proxy. The catch-all renderer forwards requests upstream with the real store `host` header and strips `domain` from `Set-Cookie`, so session cookies bind to `localhost` and ride along on subsequent requests.
+- `GET /customer/current.jwt` is not a Stencil template response, so the renderer passes the upstream plain-text JWT through untouched.
+- The B2B GraphQL API sends `access-control-allow-origin: *`, so browser calls from `http://localhost:3000` to `https://api-b2b.bigcommerce.com/graphql` are not blocked by CORS.
+
+Two caveats, both from the dev server's 15-second GET response cache:
+
+- The cache stores non-JSON upstream bodies as streams, and a stream replays **empty** once consumed — so a repeated plain-text `current.jwt` fetch within 15 seconds returns a 200 with no body. JSON responses are parsed before caching and replay intact, which is why `auth.js` requests `current.jwt` with `Accept: application/json`.
+- Cache entries are keyed **without** cookies, so a cached `current.jwt` can leak across user switches in local dev. Use `stencil start -n` (no cache) when testing login/logout or user-switching behavior.
 
 ## Permissions
 
@@ -312,20 +338,12 @@ Client-side permission checks are UX controls. The B2B API remains the source of
 - **Client ID support status.** Coral piggybacks on the B2B module's registered `app_client_id` for the `current.jwt` call — exactly what the official footer script does — but the hosted bundle's IDs have changed over time. Confirm with the B2B team that third-party themes using this ID (or registering their own) is supported usage.
 - **B2B enablement detection.** Decide whether Coral features detect B2B availability at runtime (exchange failure → hide features) or rely purely on a theme setting the merchant flips.
 - **Permissions-driven UI.** Decide how much cart/checkout gating (the default header script's `removeCart` behavior) Coral reimplements server-side versus client-side.
-- **Channel ID availability.** Confirm `settings.channel_id` exists in the Stencil context for all channels Coral will support.
+- **Channel ID availability.** `settings.channel_id` resolves on the default channel (verified on the sandbox); confirm it for any additional channels Coral supports.
 - **Environment switching.** Decide how local development switches between production, staging, integration, and local B2B API hosts.
 
 ## Roadmap
 
-### First implementation slice
-
-A minimal end-to-end spike to validate the design against a sandbox store with B2B Edition enabled (default scripts disabled per the setup requirement). The slice ships no user-facing UI; B2B account-page features build on Coral's native auth/account templates as those workflows are introduced.
-
-1. `config.js`, `auth.js`, and `client.js` with the exchange and 40101 retry.
-2. One read-only domain call (for example `customerInfo` or `customerOrders`) exercised through a dev-only diagnostic — the browser console or a temporary harness, not a shipped page — confirming the token exchange, the permission payload, the customer-keyed cache, and the 40101 retry path.
-3. Validate per the project checklist (`npm run build`, `stencil bundle`, `stencil start`) plus a manual login → exchange smoke test.
-
-### Subsequent features
+### Next features
 
 In rough order, each landing only after the previous layer is stable:
 
