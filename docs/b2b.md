@@ -6,6 +6,19 @@ This document is the design reference for integrating the BigCommerce B2B Editio
 
 The goal is a small JavaScript SDK that authenticates against the B2B GraphQL API and powers Coral features such as company orders, quotes, and shopping lists. The goal is **not** to boot or reimplement the B2B Buyer Portal React SPA. Coral keeps its server-rendered Stencil baseline and adds theme modules and Preact leaves for specific B2B features, following the conventions in `docs/javascript.md`.
 
+This gives developers a theme-native, custom Buyer Portal route as an alternative to the drop-in Buyer Portal app. The SDK is the foundation; purchasing controls and account workflows are still to come (see Roadmap).
+
+## Development Store Setup
+
+B2B is opt-in. The starter theme ships with `b2b_enabled: false`, and with B2B disabled the SDK makes no B2B API requests. To develop against B2B Edition:
+
+1. **Use a B2B-enabled test store and channel.** A sandbox store, or a storefront channel in prelaunch status, with B2B Edition enabled for that channel.
+2. **Link a Company user.** Create a Company in B2B Edition, add a user to it, and log in to the storefront as that customer. The token exchange only succeeds for customers who belong to a Company.
+3. **Opt the theme in.** Set `"b2b_enabled": true` under `settings` in `config.json` (see Configuration), then restart `stencil start`.
+4. **Use the right channel.** `stencil start` must render the B2B-enabled channel; on multi-storefront stores, pick that channel when Stencil CLI asks. Coral publishes `settings.channel_id` as `window.Coral.b2b.channelId`, and the exchange authorizes against that channel.
+5. **Handle the default scripts.** Remove B2B Edition's default Script Manager scripts on the test channel so Coral owns account and login pages (see [Default scripts and Coral](#default-scripts-and-coral)).
+6. **Run the diagnostic.** Log in as the Company user and run the [dev diagnostic](#dev-diagnostic).
+
 ## Reference Materials
 
 - **Buyer Portal source (open source SPA)**: [bigcommerce/b2b-buyer-portal](https://github.com/bigcommerce/b2b-buyer-portal). Source paths below are relative to that repository.
@@ -14,9 +27,10 @@ The goal is a small JavaScript SDK that authenticates against the B2B GraphQL AP
   - GraphQL operations by domain: `apps/storefront/src/shared/service/b2b/graphql/`
   - Permission checks: `apps/storefront/src/utils/b3CheckPermissions/`
   - Runtime config consumption: `apps/storefront/src/utils/basicConfig.ts`
-- **BigCommerce developer docs**: [developer.bigcommerce.com](https://developer.bigcommerce.com/)
-  - [B2B Edition hosted authentication](https://developer.bigcommerce.com/docs/b2b-edition/authentication/hosted-auth)
-  - [Current Customer API](https://developer.bigcommerce.com/docs/start/authentication/current-customer)
+- **BigCommerce developer docs**: [docs.bigcommerce.com](https://docs.bigcommerce.com/)
+  - [B2B Edition authentication for hosted storefronts](https://docs.bigcommerce.com/docs/b2b-edition/authentication/hosted-auth)
+  - [Current Customer API](https://docs.bigcommerce.com/docs/start/authentication/current-customer)
+  - [Integrate Buyer Portal with Stencil](https://docs.bigcommerce.com/developer/docs/b2b-edition/storefront/buyer-portal/stencil) (Script Manager setup)
 - **Default Script Manager snippets** that B2B Edition injects into Stencil storefronts (summarized below).
 
 Treat the Buyer Portal source the same way Coral treats Cornerstone: reference material to confirm API expectations, not a base to copy wholesale. Query documents can be cropped from the source as each Coral feature lands.
@@ -65,12 +79,16 @@ window.B3 = {
 Notes:
 
 - `b2b_url: "https://api.bundleb2b.net"` is a legacy domain. The current Buyer Portal source resolves production to `https://api-b2b.bigcommerce.com` (`shared/service/request/base.ts`). Both front the same service; new code uses the bigcommerce.com domain.
-- `b2b_client_id` (`dl7c39mdpul6hyc489yk0vzxl6jesyx`) is the B2B module's public client ID registered for the Current Customer API. It is a public storefront value, not a secret.
+- `b2b_client_id` (`dl7c39mdpul6hyc489yk0vzxl6jesyx`) is B2B Edition's public client ID for the Current Customer API. It is a public storefront value, not a secret.
 - Coral needs nothing else from this script. The SPA bundle, checkout DOM selectors, and captcha key are SPA boot concerns. B2B configuration in Coral lives under `window.Coral.b2b`, never as a second `window.B3` runtime.
 
-### Store setup requirement: disable the default scripts
+### Default scripts and Coral
 
-Any store used for Coral B2B development, QA, or production must have the default B2B Edition Script Manager scripts disabled (B2B Edition supports this). While those scripts are active, the injected SPA hides the `body` on account/login pages, hides cart UI with the permission CSS above, and hijacks login and account links — which breaks both the Coral pages under test and any validation pass run against them. Coral's theme features assume the theme owns account and login pages.
+While B2B Edition's default scripts are active, the injected SPA hides the `body` on account/login pages, hides cart UI with the permission CSS above, and hijacks login and account links. That breaks the Coral pages under test and any validation pass run against them, because Coral's theme features assume the theme owns account and login pages.
+
+Remove the default `B2BEdition Header Script` and `B2BEdition Footer Script` only in a sandbox store or on a storefront channel in prelaunch status, as the [Buyer Portal Stencil guide](https://docs.bigcommerce.com/developer/docs/b2b-edition/storefront/buyer-portal/stencil) directs. Script Manager controls the storefront channel, so the change applies to the hosted storefront as well as to `stencil start` previews. Do not remove them from a live channel: Coral does not yet replace the Buyer Portal's purchasing controls or account workflows.
+
+Coral's `b2b_enabled` setting only controls Coral's own SDK. Setting it to `false` does not disable store-managed Buyer Portal scripts.
 
 ## Auth and Token Exchange
 
@@ -92,7 +110,7 @@ GET {window.origin}/customer/current.jwt?app_client_id={clientId}
 - Returns a short-lived (about 15 minutes) signed JWT identifying the current customer. The default response is the JWT as plain text; with `Accept: application/json` it is `{ "token": "<jwt>" }`, and errors become structured `{ "errors": [{ "detail": "…" }] }` responses. Coral requests the JSON variant (see Local Development below).
 - Requires a logged-in customer session; returns an error otherwise.
 - BigCommerce reuses the same JWT for repeat calls within its lifetime rather than minting one per request (observed).
-- `app_client_id` must be a client ID registered for the Current Customer API. The B2B module's production ID is `dl7c39mdpul6hyc489yk0vzxl6jesyx`.
+- `app_client_id` must be a client ID registered for the Current Customer API. B2B Edition's [hosted storefront authentication docs](https://docs.bigcommerce.com/docs/b2b-edition/authentication/hosted-auth) direct integrations to request this JWT with B2B Edition's public client ID, `dl7c39mdpul6hyc489yk0vzxl6jesyx`, and pass it to the `authorization` mutation below. Coral follows that documented flow.
 - Buyer Portal reference: `apps/storefront/src/shared/service/bc/api/login.ts`.
 
 ### 2. Exchange the customer JWT for a B2B token
@@ -213,12 +231,12 @@ window.Coral.b2b = {
 
 String settings render with triple-stash: Handlebars HTML-escaping would corrupt values inside `<script>` content (browsers do not decode entities there), so values such as a URL containing `&` must pass through unescaped. This trusts `config.json` values, which are already developer-privileged.
 
-Exact theme setting names can change at implementation time. Defaults:
+The theme settings live under `settings` in `config.json`: `b2b_enabled`, `b2b_api_base_url`, and `b2b_client_id`. They are developer-configured; Coral does not expose them as merchant-facing theme editor controls. Defaults, shared by `config.json` and `config.js`:
 
-- `enabled`: false until the theme explicitly opts in.
+- `enabled`: false. Set `b2b_enabled` to `true` to opt a B2B store in.
 - `channelId`: `settings.channel_id` (available in the Stencil template context), fallback to `1`.
 - `apiBaseUrl`: `https://api-b2b.bigcommerce.com`. The `b2b_api_base_url` theme setting is the single override for pointing at a non-production B2B API host; named environments are an internal BigCommerce concern the theme does not model.
-- `appClientId`: the B2B module's public production ID, configurable.
+- `appClientId`: B2B Edition's public client ID, configurable.
 
 Guest handling has two layers. Templates gate every B2B feature mount with `{{#if customer}}`, so guests never load B2B feature code. As a second guard, `customerId` is `null` for guests and the SDK refuses to attempt an exchange when it is not set. The SDK also refuses while `enabled` is false, so calling B2B code on a theme that has not opted in fails fast instead of reaching the API.
 
@@ -260,7 +278,7 @@ The SDK is lazy: features call `getB2BToken()` on demand rather than authorizing
 
 ### Tests
 
-`npm test` runs `tests/b2b/` with Node's built-in test runner against small fakes for `window`, `sessionStorage`, and `fetch`. It covers blocked and full storage, storage that throws while pruning, malformed, empty, and expired entries, concurrent exchanges, logout and customer switches, and invalid-token recovery. The live diagnostic below remains the check against a real B2B store.
+`npm test` runs `tests/b2b/` with Node's built-in test runner against small fakes for `window`, `sessionStorage`, and `fetch`. It covers blocked and full storage, storage that throws while pruning, malformed, empty, and expired entries, concurrent exchanges, logout and customer switches, and invalid-token recovery. It also checks that the shipped `config.json` keeps B2B disabled and matches the SDK defaults and the settings `base.html` publishes, and that guests and disabled themes make no network requests. The live diagnostic below remains the check against a real B2B store.
 
 ### Dev diagnostic
 
@@ -271,7 +289,7 @@ await import('/assets/js/b2b/diagnostic.js');
 await CoralB2BDiagnostic.run();
 ```
 
-It logs `PASS`/`FAIL` per step and returns `true` when every step passes.
+It logs `PASS`/`FAIL` per step and returns `true` when every step passes. With `b2b_enabled` still `false` it stops at the exchange with a `B2BAuthError` saying B2B is disabled by theme settings.
 
 ## Local Development with Stencil CLI
 
@@ -347,8 +365,7 @@ Client-side permission checks are UX controls. The B2B API remains the source of
 
 ## Constraints and Open Questions
 
-- **Client ID support status.** Coral piggybacks on the B2B module's registered `app_client_id` for the `current.jwt` call — exactly what the official footer script does — but the hosted bundle's IDs have changed over time. Confirm with the B2B team that third-party themes using this ID (or registering their own) is supported usage.
-- **B2B enablement detection.** Decide whether Coral features detect B2B availability at runtime (exchange failure → hide features) or rely purely on a theme setting the merchant flips.
+- **B2B enablement detection.** Coral opts in through the developer-configured `b2b_enabled` setting. Decide whether features should also detect B2B availability at runtime (exchange failure → hide features), and whether the opt-in should become a merchant-facing theme editor setting.
 - **Permissions-driven UI.** Decide how much cart/checkout gating (the default header script's `removeCart` behavior) Coral reimplements server-side versus client-side.
 
 ## Roadmap

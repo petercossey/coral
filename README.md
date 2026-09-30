@@ -29,6 +29,8 @@ stencil bundle
 
 New to Stencil? Read [docs/stencil-primer.md](docs/stencil-primer.md) for how templates, data, and page types work in Coral.
 
+B2B Edition integration is off by default. To develop against a B2B store, follow the setup steps in [docs/b2b.md](docs/b2b.md#development-store-setup).
+
 ## Developer Guide
 
 Coral is intentionally smaller than Cornerstone. Use Handlebars for page structure and initial data, then add JavaScript only where the storefront needs interaction.
@@ -101,3 +103,4 @@ Feature design notes, describing implemented behavior with remaining work at the
 - [docs/cart-drawer.md](docs/cart-drawer.md): cart drawer design and roadmap.
 - [docs/add-to-cart-theme-enhancement.md](docs/add-to-cart-theme-enhancement.md): product-card add-to-cart enhancement design.
 - [docs/theme-notifications.md](docs/theme-notifications.md): theme notification design.
+- [docs/b2b.md](docs/b2b.md): B2B Edition SDK design, development store setup, and roadmap.

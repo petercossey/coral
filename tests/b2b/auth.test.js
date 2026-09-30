@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
 import { installFetch, resetBrowser, shopper, storage, window } from './browser.js';
-import { getB2BToken, invalidateB2BToken } from '../../assets/js/b2b/auth.js';
+import { getB2BPermissions, getB2BToken, invalidateB2BToken } from '../../assets/js/b2b/auth.js';
 import { getB2BCacheKey } from '../../assets/js/b2b/cache.js';
 import { gqlRequest } from '../../assets/js/b2b/client.js';
+import { setupB2BSession } from '../../assets/js/theme/b2b/session.js';
 
 const authError = { errors: [{ message: 'Token expired', extensions: { code: 40101 } }] };
 
@@ -61,16 +62,19 @@ test('authorizes when session storage is full', async () => {
   assert.equal(calls.authorize, 1);
 });
 
-test('refuses to exchange for guests or when B2B is disabled', async () => {
+test('makes no network requests for guests or when B2B is disabled', async () => {
   const calls = installFetch();
 
-  window.Coral.b2b = { ...shopper, customerId: null };
-  await assert.rejects(getB2BToken(), { name: 'B2BAuthError' });
+  for (const b2b of [{ ...shopper, customerId: null }, { ...shopper, enabled: false }]) {
+    window.Coral.b2b = b2b;
 
-  window.Coral.b2b = { ...shopper, enabled: false };
-  await assert.rejects(getB2BToken(), { name: 'B2BAuthError' });
+    setupB2BSession();
+    await assert.rejects(getB2BToken(), { name: 'B2BAuthError' });
+    await assert.rejects(getB2BPermissions(), { name: 'B2BAuthError' });
+    await assert.rejects(gqlRequest('query { ok }'), { name: 'B2BAuthError' });
+  }
 
-  assert.equal(calls.jwt, 0);
+  assert.equal(calls.total, 0);
 });
 
 test('recovers from an invalid token with one reauthorization', async () => {

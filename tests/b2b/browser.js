@@ -64,9 +64,11 @@ export function jsonResponse(body, status = 200) {
 // Routes fetch to the Current Customer API, the B2B authorization mutation, and other
 // B2B queries. Tokens are numbered by exchange so tests can tell exchanges apart.
 export function installFetch({ queryResponses = [] } = {}) {
-  const calls = { jwt: 0, authorize: 0, query: 0, bearers: [] };
+  const calls = { total: 0, jwt: 0, authorize: 0, query: 0, bearers: [] };
 
   globalThis.fetch = async (url, options = {}) => {
+    calls.total += 1;
+
     if (String(url).includes('/customer/current.jwt')) {
       calls.jwt += 1;
       return jsonResponse({ token: 'header.payload.signature' });
