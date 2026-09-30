@@ -144,6 +144,10 @@ async function runExchange(config, cacheKey) {
 async function getAuthEntry() {
   const config = getB2BConfig();
 
+  if (!config.enabled) {
+    throw new B2BAuthError('B2B integration is disabled by theme settings');
+  }
+
   if (!config.customerId) {
     throw new B2BAuthError('B2B token exchange requires a logged-in customer');
   }

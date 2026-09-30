@@ -1,16 +1,17 @@
-// Read-only adapter for window.Coral.b2b published by templates/layout/base.html.
+// Defaults for window.Coral.b2b published by templates/layout/base.html.
+import { getCoralB2B } from '../context.js';
+
 const defaults = {
   enabled: false,
   storeHash: '',
   channelId: 1,
   customerId: null,
-  environment: 'production',
   apiBaseUrl: 'https://api-b2b.bigcommerce.com',
   appClientId: 'dl7c39mdpul6hyc489yk0vzxl6jesyx',
 };
 
 export function getB2BConfig() {
-  const published = window.Coral?.b2b ?? {};
+  const published = getCoralB2B();
   const config = { ...defaults };
 
   for (const key of Object.keys(defaults)) {

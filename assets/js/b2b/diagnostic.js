@@ -22,8 +22,9 @@ async function run() {
 
   invalidateB2BToken();
 
+  // Never log the token itself; report only that one was issued and its length.
   const token = await getB2BToken();
-  results.push(report('exchange: B2B token issued', Boolean(token), `${token.slice(0, 16)}…`));
+  results.push(report('exchange: B2B token issued', Boolean(token), `${token.length} chars`));
 
   const permissions = await getB2BPermissions();
   results.push(

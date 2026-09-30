@@ -183,7 +183,7 @@ A small theme-owned module set, following the JavaScript conventions in `docs/ja
 
 ```text
 assets/js/b2b/
-  config.js     Resolves store hash, channel ID, environment, client ID from theme context.
+  config.js     Resolves store hash, channel ID, API base URL, client ID from theme context.
   auth.js       Token manager: returns a valid B2B token, owns caching and the exchange.
   client.js     gqlRequest(query, variables) — fetch wrapper with auth and error unwrapping.
   orders.js     Domain modules added one at a time as Coral features need them.
@@ -194,32 +194,32 @@ Domain modules hold only the operations Coral features actually use — do not p
 
 ### Configuration
 
-Configuration comes from the theme, not `window.B3`. Templates publish a narrow B2B config under `window.Coral.b2b` next to the existing `window.Coral` setup in `templates/layout/base.html`:
+Configuration comes from the theme, not `window.B3`. Templates publish a narrow B2B config under `window.Coral.b2b` next to the existing `window.Coral` setup in `templates/layout/base.html`, and `config.js` reads it through the `getCoralB2B()` accessor in `assets/js/context.js`, the theme's read-only adapter for `window.Coral`:
 
 ```html
 <script nonce="{{nonce}}">
 window.Coral = window.Coral || {};
 window.Coral.b2b = {
   enabled: {{#if theme_settings.b2b_enabled}}true{{else}}false{{/if}},
-  storeHash: '{{settings.store_hash}}',
+  storeHash: '{{{settings.store_hash}}}',
   channelId: Number('{{settings.channel_id}}') || 1,
   customerId: Number('{{customer.id}}') || null,
-  environment: '{{theme_settings.b2b_environment}}',
-  apiBaseUrl: '{{theme_settings.b2b_api_base_url}}',
-  appClientId: '{{theme_settings.b2b_client_id}}'
+  apiBaseUrl: '{{{theme_settings.b2b_api_base_url}}}',
+  appClientId: '{{{theme_settings.b2b_client_id}}}'
 };
 </script>
 ```
 
+String settings render with triple-stash: Handlebars HTML-escaping would corrupt values inside `<script>` content (browsers do not decode entities there), so values such as a URL containing `&` must pass through unescaped. This trusts `config.json` values, which are already developer-privileged.
+
 Exact theme setting names can change at implementation time. Defaults:
 
 - `enabled`: false until the theme explicitly opts in.
-- `channelId`: `settings.channel_id`, fallback to `1`.
-- `environment`: `production`.
-- `apiBaseUrl`: `https://api-b2b.bigcommerce.com`, with an override for staging/local testing.
+- `channelId`: `settings.channel_id` (available in the Stencil template context), fallback to `1`.
+- `apiBaseUrl`: `https://api-b2b.bigcommerce.com`. The `b2b_api_base_url` theme setting is the single override for pointing at a non-production B2B API host; named environments are an internal BigCommerce concern the theme does not model.
 - `appClientId`: the B2B module's public production ID, configurable.
 
-Guest handling has two layers. Templates gate every B2B feature mount with `{{#if customer}}`, so guests never load B2B code paths. As a second guard, `customerId` is `null` for guests and the SDK refuses to attempt an exchange when it is not set.
+Guest handling has two layers. Templates gate every B2B feature mount with `{{#if customer}}`, so guests never load B2B code paths. As a second guard, `customerId` is `null` for guests and the SDK refuses to attempt an exchange when it is not set. The SDK also refuses while `enabled` is false, so calling B2B code on a theme that has not opted in fails fast instead of reaching the API.
 
 ### `auth.js`
 
@@ -230,7 +230,7 @@ Owns one job: return a valid B2B token.
 3. Deduplicate concurrent exchange attempts behind a single in-flight promise.
 4. Expose `getB2BToken()` and `invalidateB2BToken()`, plus cached `permissions` for feature gating.
 
-On logout, auth failure, or BigCommerce session mismatch, clear the cache.
+Each fresh exchange prunes `coral:b2b:*` entries that do not belong to the current customer, so a user switch clears the previous user's token the first time B2B auth runs for the new user. The pruning is lazy — it only runs when an exchange happens — so a logged-out user's token can outlive their session (see Constraints and Open Questions).
 
 ### `client.js`
 
@@ -338,8 +338,7 @@ Client-side permission checks are UX controls. The B2B API remains the source of
 - **Client ID support status.** Coral piggybacks on the B2B module's registered `app_client_id` for the `current.jwt` call — exactly what the official footer script does — but the hosted bundle's IDs have changed over time. Confirm with the B2B team that third-party themes using this ID (or registering their own) is supported usage.
 - **B2B enablement detection.** Decide whether Coral features detect B2B availability at runtime (exchange failure → hide features) or rely purely on a theme setting the merchant flips.
 - **Permissions-driven UI.** Decide how much cart/checkout gating (the default header script's `removeCart` behavior) Coral reimplements server-side versus client-side.
-- **Channel ID availability.** `settings.channel_id` resolves on the default channel (verified on the sandbox); confirm it for any additional channels Coral supports.
-- **Environment switching.** Decide how local development switches between production, staging, integration, and local B2B API hosts.
+- **Logout cache clearing.** Cache pruning is lazy, so after logout a still-valid (~1 day) B2B token from the previous user remains in `sessionStorage` until the next B2B exchange or tab close — guests and users who never touch B2B features never trigger the prune. Revisit with a small boot-time prune or a logout hook if this gap matters in practice; on shared machines it leaves a usable bearer token readable by same-origin scripts.
 
 ## Roadmap
 

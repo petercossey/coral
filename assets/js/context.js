@@ -7,6 +7,10 @@ export function getCoralPageType() {
   return window.Coral?.pageType ?? '';
 }
 
+export function getCoralB2B() {
+  return window.Coral?.b2b ?? {};
+}
+
 export function getContextValue(key, fallback = undefined) {
   if (!key) {
     return fallback;
