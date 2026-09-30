@@ -8,15 +8,15 @@ The goal is a small JavaScript SDK that authenticates against the B2B GraphQL AP
 
 ## Reference Materials
 
-- **Buyer Portal source (open source SPA)**: `/Users/peter.cossey/www/coral-project/b2b-buyer-portal`
+- **Buyer Portal source (open source SPA)**: [bigcommerce/b2b-buyer-portal](https://github.com/bigcommerce/b2b-buyer-portal). Source paths below are relative to that repository.
   - Auth flow: `apps/storefront/src/utils/loginInfo.ts`
   - Request layer: `apps/storefront/src/shared/service/request/` (`base.ts`, `fetch.ts`, `b3Fetch.ts`)
   - GraphQL operations by domain: `apps/storefront/src/shared/service/b2b/graphql/`
   - Permission checks: `apps/storefront/src/utils/b3CheckPermissions/`
   - Runtime config consumption: `apps/storefront/src/utils/basicConfig.ts`
-- **Local developer docs**: `/Users/peter.cossey/www/coral-project/developer-docs`
-  - `docs/b2b-edition/authentication/hosted-auth.mdx`
-  - `docs/start/authentication/current-customer.mdx`
+- **BigCommerce developer docs**: [developer.bigcommerce.com](https://developer.bigcommerce.com/)
+  - [B2B Edition hosted authentication](https://developer.bigcommerce.com/docs/b2b-edition/authentication/hosted-auth)
+  - [Current Customer API](https://developer.bigcommerce.com/docs/start/authentication/current-customer)
 - **Default Script Manager snippets** that B2B Edition injects into Stencil storefronts (summarized below).
 
 Treat the Buyer Portal source the same way Coral treats Cornerstone: reference material to confirm API expectations, not a base to copy wholesale. Query documents can be cropped from the source as each Coral feature lands.

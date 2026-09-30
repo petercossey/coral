@@ -33,16 +33,16 @@ Stencil is BigCommerce's theme engine for building hosted storefronts. Themes ar
 - Bypass Stencil's built-in Sass pipeline; do not use `{{stylesheet}}` for Coral's main CSS.
 - Do not run Vite as the storefront server. `stencil start` owns storefront rendering; Vite runs only as an asset watcher through `stencil.conf.cjs`.
 
-## Local References
+## Reference Materials
 
-- Cornerstone reference theme: `/Users/peter.cossey/www/coral-project/cornerstone`
-- Stencil CLI source reference: `/Users/peter.cossey/www/coral-project/stencil-cli`
-- Stencil Utils source reference: `/Users/peter.cossey/www/coral-project/stencil-utils`
-- BigCommerce developer docs: `/Users/peter.cossey/www/coral-project/developer-docs`
+- Cornerstone reference theme: [bigcommerce/cornerstone](https://github.com/bigcommerce/cornerstone)
+- Stencil CLI source reference: [bigcommerce/stencil-cli](https://github.com/bigcommerce/stencil-cli)
+- Stencil Utils source reference: [bigcommerce/stencil-utils](https://github.com/bigcommerce/stencil-utils)
+- BigCommerce developer docs: [developer.bigcommerce.com](https://developer.bigcommerce.com/)
 
 Use Cornerstone and the docs to confirm Stencil expectations, template names, config shape, theme objects, and packaging behavior. Treat Cornerstone as reference material, not as a base to copy wholesale.
 
-Use the globally installed `stencil` command for local validation. Do not run the local `stencil-cli` source tree as the project CLI.
+Use the globally installed `stencil` command for local validation. Do not run a `stencil-cli` source checkout as the project CLI.
 
 ## Working Style
 
@@ -86,6 +86,6 @@ Do not leave long-running `stencil start` sessions active after validation unles
 - Theme configuration lives in `config.json`.
 - Template context is exposed through Stencil Handlebars objects and helpers.
 - Use `{{inject}}` / `{{jsContext}}` only when client-side code genuinely needs server-rendered context.
-- Storefront API work should be checked against the local developer docs before implementation.
+- Storefront API work should be checked against the BigCommerce developer docs linked above before implementation.
 - No-JavaScript fallbacks are optional for client components; do not replace whole pages with Preact.
 - Theme modules should preserve server-rendered fallbacks where practical.
