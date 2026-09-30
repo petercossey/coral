@@ -1,6 +1,7 @@
 import { signal } from '@preact/signals';
 
 export const cartDrawerOpen = signal(false);
+export const cartDrawerReady = signal(false);
 export const cartSummary = signal(null);
 const currentCartId = signal(null);
 
@@ -115,6 +116,10 @@ function normalizeCartSummary(summary = {}, metadata = {}) {
     stale: metadata.stale ?? summary.stale ?? true,
     updatedAt: metadata.updatedAt || Date.now(),
   };
+}
+
+export function setCartDrawerReady(ready) {
+  cartDrawerReady.value = Boolean(ready);
 }
 
 export function openCartDrawer() {

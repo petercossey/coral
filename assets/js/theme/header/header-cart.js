@@ -1,5 +1,5 @@
 import { effect } from '@preact/signals';
-import { cartSummary, openCartDrawer } from '../../state/cart.js';
+import { cartDrawerReady, cartSummary, openCartDrawer } from '../../state/cart.js';
 
 const triggerSelector = '[data-cart-drawer-trigger]';
 const drawerSelector = '[data-coral-component="cart-drawer"]';
@@ -75,6 +75,8 @@ function setupCartSummaryRender(link) {
 }
 
 export function setupHeaderCart({ root = document } = {}) {
+  // Mount markup can exist before the Preact drawer finishes loading. Listeners
+  // still attach, but clicks only intercept navigation once the drawer is ready.
   if (!document.querySelector(drawerSelector)) {
     return;
   }
@@ -89,6 +91,10 @@ export function setupHeaderCart({ root = document } = {}) {
 
     link.addEventListener('click', (event) => {
       if (!isStandardClick(event)) {
+        return;
+      }
+
+      if (!cartDrawerReady.value) {
         return;
       }
 

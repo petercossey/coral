@@ -12,7 +12,7 @@ This document records the drawer's design principles and the parts of the cart r
 - `templates/common/header.html` renders the header cart link from the Stencil `cart` object.
 - `assets/js/theme/header/header-cart.js` intercepts standard cart-link clicks, calls `openCartDrawer()`, and updates its own count/subtotal from shared cart state.
 - `assets/js/state/cart.js` owns `cartDrawerOpen`, the known cart ID, and a normalized `cartSummary`.
-- `assets/js/components/cart-drawer/cart-drawer.client.jsx` owns the drawer UI shell and renders the current cart summary.
+- `assets/js/components/cart-drawer/cart-drawer.client.jsx` owns the drawer UI shell as a native `<dialog>` and renders the current cart summary.
 - `assets/js/theme/cart/add-to-cart.js` routes successful product-card mutations into the same shared state, and a successful add surfaces an "Open cart" notification action rather than auto-opening the drawer.
 
 This structure is the foundation: server-rendered markup triggers a Preact-owned leaf through shared state.
@@ -42,8 +42,10 @@ Existing state and actions:
 
 ```js
 export const cartDrawerOpen = signal(false);
+export const cartDrawerReady = signal(false);
 export const cartSummary = signal(null);
 
+export function setCartDrawerReady(ready) {}
 export function openCartDrawer() {}
 export function closeCartDrawer() {}
 export function getCurrentCartId() {}
@@ -242,7 +244,8 @@ Cons:
 
 The Preact drawer should:
 
-- Render open/closed state.
+- Own the native `<dialog>` modal shell and its open/close interaction contract.
+- Render open/closed state from `cartDrawerOpen` and call `showModal()` / `close()` to keep the dialog synchronized.
 - Render current cart summary state.
 - Trigger `ensureCartFresh()` on open when the state module says refresh is needed.
 - Call exported cart actions for future item mutations.
@@ -256,6 +259,47 @@ The drawer should not:
 - Own cart mutation concurrency.
 - Update unrelated DOM such as the header cart count directly.
 
+## Interaction Contract
+
+The summary drawer is a modal dialog. Cart state remains the coordination layer; the Preact leaf owns browser dialog behavior.
+
+### Opening
+
+- `openCartDrawer()` sets `cartDrawerOpen`. The drawer reacts by calling `dialog.showModal()`.
+- Opening paths are the header cart link and the add-to-cart notification's "Open cart" action.
+- Before focus moves into the dialog, the drawer captures `document.activeElement` as the opener.
+- Initial focus moves to the visible close button. That control has a `:focus-visible` ring; do not remove its outline without a replacement indicator.
+- `showModal()` provides browser-managed focus containment and makes background content inert.
+
+### Closing
+
+These paths all dismiss the drawer and must stay synchronized with `cartDrawerOpen`:
+
+- Escape (`cancel` is prevented so state can drive animated close)
+- Backdrop click on the `<dialog>` element
+- Close button
+- Programmatic `closeCartDrawer()`
+
+After the dialog closes:
+
+- Focus returns to the captured opener when it is still connected.
+- If the opener is gone (for example a notification action that expired), focus falls back to `[data-cart-drawer-trigger]`.
+- Temporary document scroll-lock styles are restored.
+
+### Motion
+
+- Open and close transitions use transform/opacity on the dialog and `::backdrop`.
+- `prefers-reduced-motion: reduce` disables those transitions and closes immediately.
+- Exit animation uses an `is-closing` class plus a timeout fallback so cleanup does not depend only on `transitionend`.
+- Rapid reopen while closing cancels the pending close, keeps the dialog open, and refocuses the close button.
+
+### Progressive Enhancement
+
+- The header cart control remains a normal cart-page anchor.
+- Modified clicks (new tab, and so on) are never intercepted.
+- Theme setup may attach listeners when the drawer mount element exists, but standard clicks intercept navigation only when `cartDrawerReady` is true. The mount node can exist before the Preact leaf finishes loading.
+- When the drawer is not ready, the cart link navigates to the cart page as usual.
+
 ## Header Responsibilities
 
 The header cart link should remain server-rendered and progressively enhanced.
@@ -263,7 +307,7 @@ The header cart link should remain server-rendered and progressively enhanced.
 Near-term:
 
 - It continues to display server-rendered quantity and subtotal.
-- It opens the drawer through `openCartDrawer()`.
+- It opens the drawer through `openCartDrawer()` only when `cartDrawerReady` is true.
 - It can read `cartSummary` and update its count/subtotal after client-side cart changes.
 - It should update only its own markup rather than letting the drawer or mutation modules reach into the header DOM.
 
@@ -290,6 +334,8 @@ Do not add a future event until at least one non-state consumer needs it.
 
 - Seed props on the drawer mount in `templates/layout/base.html`.
 - Shared `cartSummary` and `seedCartSummary()` in `assets/js/state/cart.js`.
+- Native `<dialog>` drawer with `showModal()`, Escape/backdrop/close dismissal, focus restore, scroll lock, and reduced-motion-aware transitions.
+- `cartDrawerReady` gates header click interception until the Preact leaf has mounted.
 - Drawer render from seeded quantity/subtotal state.
 - Header count/subtotal updates from the same cart state.
 - Product-card add-to-cart routes successful responses into shared cart state and keeps the non-JavaScript link fallback.

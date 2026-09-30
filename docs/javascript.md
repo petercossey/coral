@@ -173,7 +173,7 @@ Coral's current Theme Module model is explicit setup functions. Templates use fe
 Theme modules are plain setup functions:
 
 ```js
-import { openCartDrawer } from '../../state/cart.js';
+import { cartDrawerReady, openCartDrawer } from '../../state/cart.js';
 
 const triggerSelector = '[data-cart-drawer-trigger]';
 const drawerSelector = '[data-coral-component="cart-drawer"]';
@@ -190,6 +190,10 @@ export function setupHeaderCart({ root = document } = {}) {
   for (const link of root.querySelectorAll(triggerSelector)) {
     link.addEventListener('click', (event) => {
       if (!isStandardClick(event)) {
+        return;
+      }
+
+      if (!cartDrawerReady.value) {
         return;
       }
 
@@ -284,7 +288,7 @@ Use shared state for current values such as whether the cart drawer is open. Use
 
 ## Example: Cart Coordination
 
-The header cart link is server-rendered markup with a normal `href` fallback. Its theme module intercepts only standard clicks when the cart drawer component exists, then calls `openCartDrawer()` from shared cart state.
+The header cart link is server-rendered markup with a normal `href` fallback. Its theme module intercepts only standard clicks when the cart drawer component is ready, then calls `openCartDrawer()` from shared cart state. See `docs/cart-drawer.md` for the drawer's focus, dismissal, and progressive-enhancement contract.
 
 That example shows the intended coordination:
 
