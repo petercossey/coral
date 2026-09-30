@@ -4,7 +4,8 @@
 //   await import('/assets/js/b2b/diagnostic.js')
 //   await CoralB2BDiagnostic.run()
 import { getB2BConfig } from './config.js';
-import { getB2BCacheKey, getB2BPermissions, getB2BToken, invalidateB2BToken } from './auth.js';
+import { getB2BPermissions, getB2BToken, invalidateB2BToken } from './auth.js';
+import { getB2BCacheKey, pruneB2BCache, readB2BCache } from './cache.js';
 import { getCustomerOrders } from './orders.js';
 
 function report(step, ok, detail) {
@@ -38,6 +39,25 @@ async function run() {
       'cache: second call reuses customer-keyed entry',
       cachedToken === token && Boolean(window.sessionStorage.getItem(cacheKey)),
       cacheKey,
+    ),
+  );
+
+  window.sessionStorage.setItem(cacheKey, '{not json');
+  await getB2BToken();
+  results.push(report('cache: malformed entry is replaced by a fresh exchange', readB2BCache(cacheKey) !== null));
+
+  const expired = readB2BCache(cacheKey);
+  window.sessionStorage.setItem(cacheKey, JSON.stringify({ ...expired, issuedAt: 0 }));
+  await getB2BToken();
+  results.push(report('cache: expired entry is replaced by a fresh exchange', readB2BCache(cacheKey)?.issuedAt > 0));
+
+  const otherCustomerKey = getB2BCacheKey({ ...config, customerId: 'other' });
+  window.sessionStorage.setItem(otherCustomerKey, '{}');
+  pruneB2BCache();
+  results.push(
+    report(
+      'prune: other customer entry removed, current entry kept',
+      window.sessionStorage.getItem(otherCustomerKey) === null && readB2BCache(cacheKey) !== null,
     ),
   );
 

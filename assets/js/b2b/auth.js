@@ -1,7 +1,6 @@
-// B2B token manager: returns a valid B2B bearer token, owns caching and the exchange.
+// B2B token manager: returns a valid B2B bearer token and runs the exchange; cache.js stores it.
+import { clearB2BCache, getB2BCacheKey, readB2BCache, writeB2BCache } from './cache.js';
 import { getB2BConfig } from './config.js';
-
-const cacheKeyPrefix = 'coral:b2b:';
 
 const authorizeMutation = `
 mutation Authorize($bcToken: String!, $channelId: Int!) {
@@ -23,45 +22,6 @@ export class B2BAuthError extends Error {
   constructor(message, { cause } = {}) {
     super(message, { cause });
     this.name = 'B2BAuthError';
-  }
-}
-
-export function getB2BCacheKey(config = getB2BConfig()) {
-  return `${cacheKeyPrefix}${config.storeHash}:${config.channelId}:${config.customerId}`;
-}
-
-function readCache(cacheKey) {
-  try {
-    const raw = window.sessionStorage.getItem(cacheKey);
-
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(cacheKey, entry) {
-  try {
-    window.sessionStorage.setItem(cacheKey, JSON.stringify(entry));
-  } catch {
-    // Session storage may be unavailable; the SDK degrades to exchanging per request.
-  }
-}
-
-// A cached entry for a different customer is discarded, not reused.
-function discardOtherCustomerEntries(cacheKey) {
-  const stale = [];
-
-  for (let index = 0; index < window.sessionStorage.length; index += 1) {
-    const key = window.sessionStorage.key(index);
-
-    if (key && key.startsWith(cacheKeyPrefix) && key !== cacheKey) {
-      stale.push(key);
-    }
-  }
-
-  for (const key of stale) {
-    window.sessionStorage.removeItem(key);
   }
 }
 
@@ -135,8 +95,7 @@ async function runExchange(config, cacheKey) {
     permissions: result.permissions ?? [],
   };
 
-  discardOtherCustomerEntries(cacheKey);
-  writeCache(cacheKey, entry);
+  writeB2BCache(cacheKey, entry);
 
   return entry;
 }
@@ -153,9 +112,9 @@ async function getAuthEntry() {
   }
 
   const cacheKey = getB2BCacheKey(config);
-  const cached = readCache(cacheKey);
+  const cached = readB2BCache(cacheKey);
 
-  if (cached?.token) {
+  if (cached) {
     return cached;
   }
 
@@ -181,5 +140,5 @@ export async function getB2BPermissions() {
 }
 
 export function invalidateB2BToken() {
-  window.sessionStorage.removeItem(getB2BCacheKey());
+  clearB2BCache();
 }

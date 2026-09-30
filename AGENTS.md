@@ -74,6 +74,7 @@ Use the globally installed `stencil` command for local validation. Do not run a 
 For each meaningful theme change, verify as much of this as is practical:
 
 - `npm run build` builds Vite assets.
+- `npm test` passes (Node's built-in test runner; tests live under `tests/`).
 - `stencil bundle` validates and packages the theme.
 - `stencil start` can run the theme locally.
 - Any introduced build, lint, or test command passes.

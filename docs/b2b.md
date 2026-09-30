@@ -184,7 +184,8 @@ A small theme-owned module set, following the JavaScript conventions in `docs/ja
 ```text
 assets/js/b2b/
   config.js     Resolves store hash, channel ID, API base URL, client ID from theme context.
-  auth.js       Token manager: returns a valid B2B token, owns caching and the exchange.
+  auth.js       Token manager: returns a valid B2B token and runs the exchange.
+  cache.js      Customer-keyed token cache: session storage, freshness, pruning. No network.
   client.js     gqlRequest(query, variables) — fetch wrapper with auth and error unwrapping.
   orders.js     Domain modules added one at a time as Coral features need them.
   diagnostic.js Dev-only console diagnostic; not referenced by templates or the Vite build.
@@ -219,18 +220,25 @@ Exact theme setting names can change at implementation time. Defaults:
 - `apiBaseUrl`: `https://api-b2b.bigcommerce.com`. The `b2b_api_base_url` theme setting is the single override for pointing at a non-production B2B API host; named environments are an internal BigCommerce concern the theme does not model.
 - `appClientId`: the B2B module's public production ID, configurable.
 
-Guest handling has two layers. Templates gate every B2B feature mount with `{{#if customer}}`, so guests never load B2B code paths. As a second guard, `customerId` is `null` for guests and the SDK refuses to attempt an exchange when it is not set. The SDK also refuses while `enabled` is false, so calling B2B code on a theme that has not opted in fails fast instead of reaching the API.
+Guest handling has two layers. Templates gate every B2B feature mount with `{{#if customer}}`, so guests never load B2B feature code. As a second guard, `customerId` is `null` for guests and the SDK refuses to attempt an exchange when it is not set. The SDK also refuses while `enabled` is false, so calling B2B code on a theme that has not opted in fails fast instead of reaching the API.
 
 ### `auth.js`
 
 Owns one job: return a valid B2B token.
 
-1. Check `sessionStorage` for a cached token keyed by customer identity: `coral:b2b:<storeHash>:<channelId>:<customerId>`. The customer ID in the key is what prevents user-switching in the same browser session from reusing the previous user's still-valid B2B token; a cached entry for a different customer is discarded, not reused.
+1. Read the cached entry for the current customer from `cache.js`.
 2. On miss: fetch `/customer/current.jwt?app_client_id=...`, run the `authorization` mutation, cache the result (token + permissions), return the token.
-3. Deduplicate concurrent exchange attempts behind a single in-flight promise.
+3. Deduplicate concurrent exchange attempts behind a single in-flight promise. Page config is fixed for the life of a page, so one promise is always for the current customer.
 4. Expose `getB2BToken()` and `invalidateB2BToken()`, plus cached `permissions` for feature gating.
 
-Each fresh exchange prunes `coral:b2b:*` entries that do not belong to the current customer, so a user switch clears the previous user's token the first time B2B auth runs for the new user. The pruning is lazy — it only runs when an exchange happens — so a logged-out user's token can outlive their session (see Constraints and Open Questions).
+### `cache.js`
+
+Owns where the token lives and when it stops being trusted. It has no network code, so theme setup can import it on every page without pulling in the exchange.
+
+- **Key.** One entry per customer identity: `coral:b2b:<storeHash>:<channelId>:<customerId>`. Writing an entry removes every other `coral:b2b:*` entry, so the cache never holds more than one customer's token.
+- **Storage.** Entries live in `sessionStorage`. Every storage call is guarded on its own, so a blocked or full storage never breaks authorization or global theme setup. When a write fails, the entry is kept in an in-memory map for the life of the page instead: authorization still works, but each page load exchanges again. A failed write does not stop reads, listing, or removal, so pruning still clears a previous customer's persisted entry.
+- **Freshness.** Each entry records `issuedAt`. Entries older than 15 minutes, or missing a non-empty string `token` or a `permissions` array, read as a miss and trigger a new exchange. Fifteen minutes matches the customer JWT lifetime that drives the Buyer Portal's re-exchange, and it bounds how long a permission change can take to reach the shopper. The token itself lasts about a day, so a cached token is rarely invalid; when one is, `client.js` invalidates it and retries once.
+- **Pruning.** `setupB2BSession()` in `assets/js/theme/b2b/session.js` runs on every page from global setup and calls `pruneB2BCache()`. That removes every entry except the current customer's, and removes all of them for guests or when B2B is disabled. Logging out, switching customers, or turning B2B off clears the previous token on the next page load, without an API call.
 
 ### `client.js`
 
@@ -248,11 +256,15 @@ B2B features follow the existing two-model split:
 - **Preact client components** own interactive B2B leaves (for example, a company orders table), mounted from normal Handlebars markup with `data-coral-component`.
 - Shared B2B state, if a feature needs it, lives in `assets/js/state/` as signals; the SDK itself stays stateless apart from the token cache. A future shared state shape, if adopted, tracks `status` (`idle | loading | ready | guest | error`), `permissions`, `customer`, `company`, and `error`.
 
-The SDK is lazy: features call `getB2BToken()` on demand rather than authorizing on every page load. There is no global B2B boot step until a feature proves one is needed. `assets/js/app.js` imports nothing from `assets/js/b2b/`; the SDK enters the bundle only when a feature module imports it.
+The SDK is lazy: features call `getB2BToken()` on demand rather than authorizing on every page load. The only global B2B step is the storage-only cache prune described under `cache.js`. The exchange and request code (`auth.js`, `client.js`, domain modules) enters the bundle only when a feature module imports it.
+
+### Tests
+
+`npm test` runs `tests/b2b/` with Node's built-in test runner against small fakes for `window`, `sessionStorage`, and `fetch`. It covers blocked and full storage, storage that throws while pruning, malformed, empty, and expired entries, concurrent exchanges, logout and customer switches, and invalid-token recovery. The live diagnostic below remains the check against a real B2B store.
 
 ### Dev diagnostic
 
-`assets/js/b2b/diagnostic.js` exercises the full chain — config, token exchange, permission payload, the customer-keyed cache, the `customerOrders` query, and the auth-failure retry path. It is not referenced by any template and is not a Vite entry; the Stencil dev server serves theme assets as-is, so it loads directly from source in the browser console on a logged-in page:
+`assets/js/b2b/diagnostic.js` exercises the full chain: config, token exchange, permission payload, the customer-keyed cache (reuse, malformed and expired entries, pruning another customer's entry), the `customerOrders` query, and the auth-failure retry path. It is not referenced by any template and is not a Vite entry; the Stencil dev server serves theme assets as-is, so it loads directly from source in the browser console on a logged-in page:
 
 ```js
 await import('/assets/js/b2b/diagnostic.js');
@@ -338,7 +350,6 @@ Client-side permission checks are UX controls. The B2B API remains the source of
 - **Client ID support status.** Coral piggybacks on the B2B module's registered `app_client_id` for the `current.jwt` call — exactly what the official footer script does — but the hosted bundle's IDs have changed over time. Confirm with the B2B team that third-party themes using this ID (or registering their own) is supported usage.
 - **B2B enablement detection.** Decide whether Coral features detect B2B availability at runtime (exchange failure → hide features) or rely purely on a theme setting the merchant flips.
 - **Permissions-driven UI.** Decide how much cart/checkout gating (the default header script's `removeCart` behavior) Coral reimplements server-side versus client-side.
-- **Logout cache clearing.** Cache pruning is lazy, so after logout a still-valid (~1 day) B2B token from the previous user remains in `sessionStorage` until the next B2B exchange or tab close — guests and users who never touch B2B features never trigger the prune. Revisit with a small boot-time prune or a logout hook if this gap matters in practice; on shared machines it leaves a usable bearer token readable by same-origin scripts.
 
 ## Roadmap
 
