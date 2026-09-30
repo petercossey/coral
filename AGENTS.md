@@ -32,6 +32,7 @@ Stencil is BigCommerce's theme engine for building hosted storefronts. Themes ar
 - Reference built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`.
 - Bypass Stencil's built-in Sass pipeline; do not use `{{stylesheet}}` for Coral's main CSS.
 - Do not run Vite as the storefront server. `stencil start` owns storefront rendering; Vite runs only as an asset watcher through `stencil.conf.cjs`.
+- `npm run dev` (the local asset watcher `stencil.conf.cjs` runs) builds in Vite's development mode so `import.meta.env.DEV` diagnostics stay on; `npm run build` and `stencil bundle` keep production defaults. See `docs/javascript.md`.
 
 ## Reference Materials
 

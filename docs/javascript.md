@@ -50,6 +50,20 @@ Stencil templates expose the current page type and injected context before `app.
 
 This is inspired by Cornerstone's useful PageManager idea: global setup runs on every page, and page setup can run by `page_type`. Coral does not copy Cornerstone's class structure, jQuery assumptions, or broad plugin conventions.
 
+## Local Diagnostics vs Production Builds
+
+Coral's asset build is plain `vite build`; there is no `vite dev` server, because `stencil start` owns storefront rendering and Vite runs only as an asset watcher through `stencil.conf.cjs`. Because `vite build` defaults to production mode even with `--watch`, `npm run dev` runs `vite build --watch --mode development` so the local asset watcher stays in development mode instead of silently inheriting production defaults.
+
+That distinction matters because `import.meta.env.DEV` guards reporting in a few places:
+
+- `assets/js/runtime/boot.js` warns on unknown client components and unmountable definitions, and logs mount failures.
+- `assets/js/theme/boot.js` logs failed page-module loads.
+- `assets/js/events.js` warns when an event topic is passed with the `coral:` prefix already applied.
+
+With `stencil start` running `npm run dev`, `import.meta.env.DEV` is `true`, so those diagnostics reach the browser console, and the build also emits sourcemaps (`vite.config.ts`) so stack traces point at real source. `npm run build` (used by `stencil bundle` and production packaging) has no `--mode` flag, so it keeps Vite's default production mode: `import.meta.env.DEV` is `false`, those branches are dead-code-eliminated from the bundle, and no sourcemaps are emitted.
+
+Use `--mode`, not a `NODE_ENV=development` shell prefix, to select Vite's mode — the flag behaves the same on every platform and does not need a `cross-env`-style dependency.
+
 ## Key Paths
 
 Coral's JavaScript layout is intentionally shallow. Keep the docs focused on stable homes for code instead of mirroring every file in the tree:

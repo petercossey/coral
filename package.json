@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "dev": "vite build --watch"
+    "dev": "vite build --watch --mode development"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",
