@@ -18,7 +18,7 @@ A shopper clicks "Add to cart" on a product card; the cart mutates via the REST 
 
 ### 1. Server-rendered markup with a hook
 
-`templates/components/featured-products/featured-products.html` renders a normal anchor:
+`templates/components/product-card/product-card.html` renders a normal anchor:
 
 ```html
 <a href="{{add_to_cart_url}}" data-coral-add-to-cart data-product-id="{{id}}">

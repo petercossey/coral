@@ -102,6 +102,7 @@ Feature design notes, describing implemented behavior with remaining work at the
 
 - [docs/cart-state-and-ui-updates.md](docs/cart-state-and-ui-updates.md): cart state boundaries and update patterns.
 - [docs/cart-drawer.md](docs/cart-drawer.md): cart drawer design and roadmap.
+- [docs/product-listings.md](docs/product-listings.md): shared product card and category listing.
 - [docs/add-to-cart-theme-enhancement.md](docs/add-to-cart-theme-enhancement.md): product-card add-to-cart enhancement design.
 - [docs/theme-notifications.md](docs/theme-notifications.md): theme notification design.
 - [docs/b2b.md](docs/b2b.md): B2B Edition SDK design, development store setup, and roadmap.
