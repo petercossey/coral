@@ -79,6 +79,8 @@ For each meaningful theme change, verify as much of this as is practical:
 - `stencil start` can run the theme locally.
 - Any introduced build, lint, or test command passes.
 
+These checks do not establish storefront workflow coverage. Assess workflows with the record format, evidence levels, and matrix in `docs/storefront-coverage.md`.
+
 If validation cannot run because store credentials, `.stencil` config, dependencies, or another local prerequisite is missing, say that explicitly and include the next concrete step.
 
 Do not leave long-running `stencil start` sessions active after validation unless the user asks for a dev server to stay running.
