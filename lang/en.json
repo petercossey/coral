@@ -8,10 +8,19 @@
     "checkout": "Check out",
     "login_for_pricing": "Log in for pricing",
     "login_to_checkout": "Log in to check out",
+    "js_required": "Turn on JavaScript to change quantities or remove items.",
     "item": {
       "price": "Price",
       "quantity": "Quantity",
-      "total": "Total"
+      "total": "Total",
+      "quantity_label": "Quantity for {name}",
+      "update": "Update",
+      "update_label": "Update quantity for {name}",
+      "remove": "Remove",
+      "remove_label": "Remove {name} from cart",
+      "quantity_invalid": "Enter a whole number of 1 or more.",
+      "quantity_min": "The minimum quantity is {quantity}.",
+      "quantity_max": "The maximum quantity is {quantity}."
     },
     "totals": {
       "heading": "Order summary",
@@ -23,6 +32,15 @@
       "gift_certificate": "Gift certificate ({code})",
       "grand_total": "Grand total",
       "tax_included": "{name} (included in total)"
+    },
+    "status": {
+      "updating": "Updating quantity…",
+      "removing": "Removing item…",
+      "updated": "Quantity updated.",
+      "removed": "Item removed from cart.",
+      "update_error": "Couldn’t update the quantity. Try again.",
+      "remove_error": "Couldn’t remove the item. Try again.",
+      "changed_error": "Your cart changed. Reload the page to see the latest cart."
     }
   },
   "category": {

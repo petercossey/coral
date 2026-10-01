@@ -185,6 +185,15 @@ export function seedCartSummary(summary) {
   return cartSummary.value;
 }
 
+// The platform deletes a cart when its last line item is removed. Forget its ID
+// so later mutations create a new cart instead of targeting the deleted one.
+export function clearCartSummary(metadata = {}) {
+  currentCartId.value = null;
+  cartSummary.value = normalizeCartSummary({ id: null, quantity: 0 }, { stale: false, ...metadata });
+
+  return cartSummary.value;
+}
+
 export function replaceCartSummary(summary, metadata = {}) {
   cartSummary.value = normalizeCartSummary(summary, {
     stale: false,

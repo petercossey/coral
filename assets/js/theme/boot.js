@@ -1,6 +1,8 @@
 import { setupGlobal } from './global.js';
 
-const pageModules = {};
+const pageModules = {
+  cart: () => import('./cart/cart-page.js'),
+};
 
 function reportThemeError(pageType, error) {
   if (import.meta.env.DEV) {

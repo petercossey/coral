@@ -214,14 +214,15 @@ export function setupGlobal(env = {}) {
 }
 ```
 
-Page-specific setup can be added later through `assets/js/theme/boot.js`:
+Page-specific setup is mapped by `page_type` in `assets/js/theme/boot.js` and loaded as a separate chunk:
 
 ```js
 const pageModules = {
-  product: () => import('./product.js'),
-  cart: () => import('./cart.js'),
+  cart: () => import('./cart/cart-page.js'),
 };
 ```
+
+The cart page module ([cart-page.md](cart-page.md#editing-line-items)) is the first page module.
 
 Rules:
 
@@ -310,7 +311,6 @@ See `docs/cart-state-and-ui-updates.md` for the cart-specific design note.
 
 Keep these decisions open until real features need them:
 
-- Page-specific module mappings beyond the empty `pageModules` object.
 - A cleanup lifecycle for theme modules.
 - Stencil Utils integration versus direct storefront API calls.
 - JSON prop helpers for complex client component data.
