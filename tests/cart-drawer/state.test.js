@@ -3,9 +3,13 @@ import { describe, it, beforeEach } from 'node:test';
 import {
   cartDrawerOpen,
   cartDrawerReady,
+  cartSummary,
+  clearCartSummary,
   closeCartDrawer,
   consumeCartDrawerOpener,
+  getCurrentCartId,
   openCartDrawer,
+  replaceCartSummary,
   setCartDrawerReady,
 } from '../../assets/js/state/cart.js';
 
@@ -49,5 +53,20 @@ describe('cart drawer state', () => {
     openCartDrawer({ opener });
     assert.equal(consumeCartDrawerOpener(), opener);
     assert.equal(consumeCartDrawerOpener(), null);
+  });
+});
+
+describe('cart summary state', () => {
+  it('forgets a deleted cart so later mutations create a new one', () => {
+    replaceCartSummary({ id: 'cart-1', quantity: 2, subtotal: { formatted: '$10.00' } });
+    assert.equal(getCurrentCartId(), 'cart-1');
+
+    const summary = clearCartSummary({ source: 'rest-storefront' });
+
+    assert.equal(getCurrentCartId(), null);
+    assert.equal(summary.id, null);
+    assert.equal(summary.quantity, 0);
+    assert.equal(summary.stale, false);
+    assert.equal(cartSummary.value, summary);
   });
 });

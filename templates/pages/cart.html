@@ -4,10 +4,12 @@ cart: true
 {{#partial "page"}}
     <section class="flex flex-col gap-6" aria-labelledby="cart-heading">
         <div class="flex flex-col gap-1">
-            <h1 class="text-3xl font-semibold" id="cart-heading">{{lang 'cart.heading'}}</h1>
+            <h1 class="text-3xl font-semibold" id="cart-heading" tabindex="-1">{{lang 'cart.heading'}}</h1>
             {{#if cart.items.length}}
                 <p class="text-sm">{{lang 'cart.item_count' quantity=cart.quantity}}</p>
             {{/if}}
+            {{!-- Feedback after a cart-page removal reloads the page; see cart-page.js. --}}
+            <p class="text-sm" role="status" data-cart-page-message data-message-removed="{{lang 'cart.status.removed'}}"></p>
         </div>
 
         {{!-- One-shot platform messages, such as a rejected add from the /cart.php
@@ -21,8 +23,26 @@ cart: true
         {{/if}}
 
         {{#if cart.items.length}}
+            <noscript>
+                <p class="text-sm">{{lang 'cart.js_required'}}</p>
+            </noscript>
+
             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-                <ul class="flex flex-col border border-slate-300 bg-white" aria-label="{{lang 'cart.items_label'}}">
+                {{!-- Line controls are enhanced by assets/js/theme/cart/cart-page.js; copy for
+                      client-side states comes from these attributes. See docs/cart-page.md. --}}
+                <ul
+                    class="flex flex-col border border-slate-300 bg-white"
+                    aria-label="{{lang 'cart.items_label'}}"
+                    data-cart-items
+                    data-cart-id="{{cart_id}}"
+                    data-message-quantity-invalid="{{lang 'cart.item.quantity_invalid'}}"
+                    data-message-updating="{{lang 'cart.status.updating'}}"
+                    data-message-removing="{{lang 'cart.status.removing'}}"
+                    data-message-updated="{{lang 'cart.status.updated'}}"
+                    data-message-update-error="{{lang 'cart.status.update_error'}}"
+                    data-message-remove-error="{{lang 'cart.status.remove_error'}}"
+                    data-message-changed-error="{{lang 'cart.status.changed_error'}}"
+                >
                     {{#each cart.items}}
                         <li class="grid grid-cols-[4rem_minmax(0,1fr)] gap-4 border-b border-slate-300 p-4 last:border-b-0 sm:grid-cols-[6rem_minmax(0,1fr)]">
                             {{#if image}}
@@ -58,7 +78,7 @@ cart: true
                                     {{/if}}
                                 </div>
 
-                                <dl class="grid grid-cols-3 gap-2 text-sm">
+                                <dl class="flex flex-wrap gap-x-8 gap-y-2 text-sm">
                                     <div>
                                         <dt>{{lang 'cart.item.price'}}</dt>
                                         <dd class="font-semibold">
@@ -69,7 +89,7 @@ cart: true
                                             {{/or}}
                                         </dd>
                                     </div>
-                                    <div>
+                                    <div data-cart-item-quantity-display>
                                         <dt>{{lang 'cart.item.quantity'}}</dt>
                                         <dd class="font-semibold">{{quantity}}</dd>
                                     </div>
@@ -84,6 +104,54 @@ cart: true
                                         </dd>
                                     </div>
                                 </dl>
+
+                                {{!-- Ordinary product lines only. The form stays hidden until the
+                                      cart page module enables it; there is no native fallback. --}}
+                                {{#all can_modify (if type '!=' 'GiftCertificate')}}
+                                    <form
+                                        class="flex flex-col gap-2"
+                                        data-cart-item-form
+                                        data-item-id="{{id}}"
+                                        data-product-id="{{product_id}}"
+                                        data-variant-id="{{variant_id}}"
+                                        data-quantity="{{quantity}}"
+                                        novalidate
+                                        hidden
+                                    >
+                                        <div class="flex flex-wrap items-end gap-2">
+                                            <div class="flex flex-col gap-1">
+                                                <label class="text-sm" for="cart-item-quantity-{{id}}">{{lang 'cart.item.quantity'}}</label>
+                                                <input
+                                                    class="w-20 border border-slate-300 px-2 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950"
+                                                    id="cart-item-quantity-{{id}}"
+                                                    name="quantity"
+                                                    type="number"
+                                                    inputmode="numeric"
+                                                    step="1"
+                                                    min="{{#if min_purchase_quantity}}{{min_purchase_quantity}}{{else}}1{{/if}}"
+                                                    {{#if max_purchase_quantity}}max="{{max_purchase_quantity}}"{{/if}}
+                                                    value="{{quantity}}"
+                                                    aria-label="{{lang 'cart.item.quantity_label' name=name}}"
+                                                    aria-describedby="cart-item-message-{{id}}"
+                                                    {{#if min_purchase_quantity}}data-message-quantity-min="{{lang 'cart.item.quantity_min' quantity=min_purchase_quantity}}"{{/if}}
+                                                    {{#if max_purchase_quantity}}data-message-quantity-max="{{lang 'cart.item.quantity_max' quantity=max_purchase_quantity}}"{{/if}}
+                                                >
+                                            </div>
+                                            <button
+                                                class="border border-slate-950 px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950 aria-disabled:opacity-60"
+                                                type="submit"
+                                                aria-label="{{lang 'cart.item.update_label' name=name}}"
+                                            >{{lang 'cart.item.update'}}</button>
+                                            <button
+                                                class="px-3 py-2 text-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950 aria-disabled:opacity-60"
+                                                type="button"
+                                                data-cart-item-remove
+                                                aria-label="{{lang 'cart.item.remove_label' name=name}}"
+                                            >{{lang 'cart.item.remove'}}</button>
+                                        </div>
+                                        <p class="text-sm" id="cart-item-message-{{id}}" data-cart-item-message aria-live="polite"></p>
+                                    </form>
+                                {{/all}}
                             </div>
                         </li>
                     {{/each}}

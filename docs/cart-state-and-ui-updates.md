@@ -25,7 +25,8 @@ Default rule:
 1. If the mutation response contains a complete Storefront cart object, call `replaceCartSummary(responseCart, { source: 'rest-storefront' })`.
 2. If the response contains only partial cart information, update known fields through a dedicated state action and mark the summary stale.
 3. If the response contains no reliable cart summary, remember any known cart ID and let a later refresh path reconcile state.
-4. Emit a Coral event only after the state transition when other modules need a moment notification.
+4. If the mutation deleted the cart, such as removing its last line item, call `clearCartSummary()` so later mutations create a new cart instead of targeting the deleted ID.
+5. Emit a Coral event only after the state transition when other modules need a moment notification.
 
 Mutation modules should not know whether the header, drawer, or another widget is listening. Their responsibility is to validate their own interaction, perform the mutation, and pass the resulting cart information to shared state.
 
@@ -60,9 +61,13 @@ The product-card add-to-cart enhancement posts to the REST Storefront Cart API. 
 
 The header cart enhancement subscribes to `cartSummary` and updates only its own count, subtotal, and accessible label. The cart drawer reads the same state signal.
 
+## Example: Cart Page Line Items
+
+The cart page updates and removes lines through the REST Storefront Cart API (see [cart-page.md](cart-page.md#editing-line-items)). It passes a returned cart to `replaceCartSummary()`, or calls `clearCartSummary()` when the last line's removal deleted the cart, then emits `cart:item-updated` or `cart:item-removed` and reloads so the server renders the confirmed cart. One mutation runs at a time on the page, which is its stale-response policy.
+
 ## Future Work
 
 - Add `cartStatus`, `cartError`, `markCartStale()`, and `ensureCartFresh()` when the drawer needs authoritative refreshes.
-- Add a stale-response policy before introducing concurrent drawer mutations.
+- Add a shared stale-response policy before the drawer and other surfaces mutate the cart concurrently; the cart page's one-at-a-time lock covers only that page.
 - Add dedicated partial-state actions only when a real mutation returns less than a full cart object.
 - Keep Storefront API transport helpers inside `assets/js/state/cart.js` until multiple modules need direct low-level API access.
