@@ -25,6 +25,8 @@ Only declared data is available to the template. Some objects, such as `product`
 
 Templates render from Stencil's Handlebars context: objects such as `product`, `cart`, `urls`, `settings`, and `categories`, plus helpers such as `{{cdn}}` and `{{getImageSrcset}}`. See the [Handlebars reference](https://developer.bigcommerce.com/docs/storefront/stencil/themes/context/handlebars-reference).
 
+Page templates render their `page` block through Stencil's `{{#block}}` helper, which does not carry Handlebars data variables into the block. Inside a page block, `@root` is empty, so reach outer context with `../` paths or pass values into partials explicitly, as the [product card](product-listings.md#product-card) does.
+
 To inspect the context for any page during `stencil start`, append `?debug=context` to the local URL for raw JSON, or `?debug=bar` to see the rendered page and JSON together.
 
 ## Page Types

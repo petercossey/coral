@@ -1,5 +1,20 @@
 {
+  "category": {
+    "subcategories": "Subcategories",
+    "no_products": "There are no products in this category.",
+    "search_error": "Products in this category could not be loaded. Please try again in a few seconds."
+  },
   "checkout": {
     "title": "Checkout"
+  },
+  "products": {
+    "card": {
+      "view": "View {name}",
+      "image_unavailable": "Image unavailable",
+      "login_for_pricing": "Log in for pricing",
+      "choose_options": "Choose options",
+      "pre_order": "Pre-order",
+      "add_to_cart": "Add to cart"
+    }
   }
 }
