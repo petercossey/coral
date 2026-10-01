@@ -117,6 +117,8 @@ Records never contain credentials, API tokens, `.stencil` or `secrets.stencil.js
 
 Cases that depend on the shopper session, such as a cart, run `stencil start --no-cache`. By default `stencil start` caches page responses for 15 seconds keyed on URL and request headers but not cookies, so a render can come from an earlier request or another session.
 
+Cases that send native `/cart.php` adds, by `curl` or browser automation, present a desktop browser User-Agent: `curl -A '<desktop browser UA>'`, or `userAgent` on the automation context. The platform rejects native adds from user agents it classifies as automated, such as `curl/<version>` and headless Chromium's default `HeadlessChrome/<version>`. The request still returns `302` to `/cart.php`, no cart is created, and the cart page shows "Unfortunately this product is not available for purchase." for the same product that a browser adds successfully. The REST Storefront Cart API answers a plain `curl` request with a `403` bot challenge page. Neither rule is in the official docs; it is observed platform behavior ([#25](https://github.com/petercossey/coral/issues/25)).
+
 Commands that start `stencil start` stop it once the evidence is captured.
 
 ## Record Template
@@ -203,12 +205,12 @@ This record is the worked example for the format.
 - *Source-derived, not route-observed:* a card renders "Choose options" linking to the product when `has_options` is true, and a plain "Pre-order" link for pre-order products.
 - *Source-derived, not browser-observed:* with JavaScript, a standard click on an eligible link stays on the page, posts one line item to the REST Storefront Cart API (creating a cart when no cart ID is known), marks the link busy, replaces shared cart state from the response, and emits `cart:item-added`. The header count and subtotal render from shared state, and a notification offers "Open cart". Modified clicks, other targets, and ineligible links navigate normally.
 - *Source-derived, not browser-observed:* a failed request restores the link, logs the error, and emits `cart:item-add-failed`, which shows a generic failure notification.
-- Without JavaScript, the link follows `/cart.php?action=add`, which redirects to `/cart.php`. Coral's cart page renders a placeholder, not the cart contents. Whether the fallback adds the item to the session is not yet observed.
+- Without JavaScript, the link follows `/cart.php?action=add&product_id=<id>`, which adds one unit and redirects to `/cart.php?suggest=<id>`. The cart page lists the item with server totals, and the header and cart drawer seed show the same count and subtotal after reload and navigation.
+- A rejected native add redirects to `/cart.php`, where the platform's message renders in the cart page's status region and the cart stays empty. The platform rejects native adds from automated user agents; see [Evidence](#evidence).
 
 **Gaps**
 
 - Cards for products that cannot be purchased render no action. Cornerstone renders `out_of_stock_message` as a link to the product when present. (issue needed; product-selection audit [#15](https://github.com/petercossey/coral/issues/15))
-- The cart page renders a placeholder, so the no-JS fallback ends on a page that does not show the added item. ([#16](https://github.com/petercossey/coral/issues/16), next functional cart slice)
 - Rejected adds, such as stock or quantity limits, show only a generic failure message; validation details go to the console. (issue needed; open question in [add-to-cart-theme-enhancement.md](add-to-cart-theme-enhancement.md))
 - Card copy and the `$0.00` cart fallbacks are hardcoded English and US dollars. ([#7](https://github.com/petercossey/coral/issues/7))
 
@@ -228,18 +230,21 @@ This record is the worked example for the format.
 | `F-SIMPLE · F-CART-EMPTY` | Rendering | `curl -s http://localhost:3000/` and `curl -s 'http://localhost:3000/?debug=context'` from a fresh session. | 200; `page_type` `default`; each `F-SIMPLE` card with `show_cart_action` has one enhanced "Add to cart" link to `/cart.php?action=add&product_id=<id>`. | 200; `default`; two featured products (IDs 111 and 107), both simple, both with enhanced links. | Pass |
 | `F-OPTIONS`, `F-PREORDER`, `F-RESTRICTED` | Rendering | Feature one product of each fixture, then repeat the case above. | "Choose options" link, plain "Pre-order" link, and out-of-stock message respectively. | Not run. | Unverified: the featured set contains only simple products. Next: feature the three fixtures in the development store and repeat. `F-RESTRICTED` is expected to Fail on the gap above. |
 | `F-SIMPLE · mobile` | Rendering | Load `/` at 375×812. | Cards stack in one column; the action is fully visible and tappable. | Not run. | Unverified: no browser automation in the audit environment. Next: repeat in a browser with device emulation. |
-| `F-SIMPLE · F-CART-EMPTY` | Interaction | In a browser, click "Add to cart" with the DevTools network panel open. | No navigation; one `POST /api/storefront/carts` returns 200; the link shows "Adding..." and then restores; header count is 1; a success notification with "Open cart" appears. | Not run. A `curl` POST to the same endpoint returned 403. The cause is unconfirmed; missing browser session headers are a hypothesis. The result is not evidence about theme behavior. | Unverified: no browser session. Next: run the steps in a browser. |
+| `F-SIMPLE · F-CART-EMPTY` | Interaction | In a browser, click "Add to cart" with the DevTools network panel open. | No navigation; one `POST /api/storefront/carts` returns 200; the link shows "Adding..." and then restores; header count is 1; a success notification with "Open cart" appears. | Not run. A `curl` POST to the same endpoint returned 403 with a bot challenge page (see [Evidence](#evidence)); it is not evidence about theme behavior. | Unverified: no browser session. Next: run the steps in a browser. |
 | `F-SIMPLE · populated` | Interaction | After the case above, click "Add to cart" on the second card. | One `POST /api/storefront/carts/{cartId}/items`; header count is 2. | Not run. | Unverified: no browser session. Next: run in a browser after the case above. |
 | `F-SIMPLE · keyboard` | Interaction | Tab to "Add to cart" and press Enter; press Enter again while it shows "Adding...". | Same as the pointer case; the second Enter adds nothing. | Not run. | Unverified: no browser session. Next: run keyboard-only in a browser. Drawer focus after "Open cart" follows #5. |
 | `F-SIMPLE · error` | Interaction | Block `/api/storefront/carts*` in DevTools, then click "Add to cart". | No navigation; the link restores; a failure notification appears; header unchanged. | Not run. | Unverified: no browser session. Next: run with DevTools request blocking. |
-| `F-SIMPLE · F-CART-EMPTY · no-js` | Interaction | `curl -s -D - -o /dev/null 'http://localhost:3000/cart.php?action=add&product_id=111'` from a fresh session. | Redirect to the cart page. | `302` with `Location: /cart.php`. | Pass |
-| `F-SIMPLE · F-CART-EMPTY · no-js` | End-to-end | Follow the redirect to `/cart.php`. | The cart page lists the added item. | The cart page renders the "cart page" placeholder; `templates/pages/cart.html` renders no cart contents. | Fail: [#16](https://github.com/petercossey/coral/issues/16). |
-| `F-SIMPLE · F-CART-EMPTY · no-js` | End-to-end | In the same session, load `/` and request `GET /api/storefront/carts`. | The header count is 1 and the cart contains product 111. | With a curl cookie jar, the header count stays 0 and the cart list is `[]`. It is unconfirmed whether curl carries the storefront session through `stencil start` as a browser does, so this does not show whether the item persisted. | Unverified: no browser session. Next: repeat in a browser with JavaScript disabled. |
+| `F-SIMPLE · F-CART-EMPTY · no-js` | Interaction | `curl -s -A '<desktop Chrome UA>' -D - -o /dev/null 'http://localhost:3000/cart.php?action=add&product_id=111'` from a fresh session. | Redirect to the post-add cart page. | `302` with `Location: /cart.php?suggest=<id>`. | Pass |
+| `F-SIMPLE · F-CART-EMPTY · no-js` | End-to-end | In a browser with JavaScript disabled and a desktop Chrome User-Agent, load `/` and click "Add to cart" on product 111. | One `GET /cart.php?action=add&product_id=111`; the cart page lists the item, quantity 1 and $25.00 totals. | Landed on `/cart.php?suggest=<id>`; one item row; $25.00 shown; header count 1. | Pass |
+| `F-SIMPLE · F-CART-EMPTY · no-js` | End-to-end | After the case above, reload `/cart.php`, then load `/`. | The item persists; the header count and the cart drawer seed (`data-cart-quantity`, `data-cart-subtotal`, `data-cart-id`) agree with the page. | After reload one item row; on both pages header 1, seed quantity 1, subtotal $25.00, cart ID present. | Pass |
+| `F-SIMPLE · F-CART-EMPTY · no-js · error` | End-to-end | Repeat the click with headless Chromium's default `HeadlessChrome` User-Agent. | The platform's rejection renders on the cart page; no success state. | Landed on `/cart.php`; status region shows "Unfortunately this product is not available for purchase."; no item; header 0 and seed 0 / $0.00 before and after reload. | Pass |
 | `F-SIMPLE · F-CART-EMPTY` | End-to-end | Add with JavaScript, reload `/`, then open the cart drawer from the header. | After the reload, the header and drawer show 1 item and the server-rendered subtotal. | Not run. | Unverified: no browser session. Next: run in a browser after the first interaction case. |
+
+The no-JS split reproduces on the live HTTPS storefront, which runs Cornerstone rather than Coral, so it confirms platform behavior only: with JavaScript disabled, clicking product 111's card link with a desktop Chrome User-Agent adds the item and survives reload, while the default `HeadlessChrome` User-Agent is rejected. `curl` GET adds with desktop Chrome, Firefox, and bare `Mozilla/5.0` User-Agents succeed; `curl/8.18.0` and `HeadlessChrome` are rejected. A same-origin multipart `POST /cart.php` with the product page's form fields and a `curl` User-Agent is also rejected. GET adds succeed with browser User-Agents, so the request method is not the cause and a POST form would not avoid the rejection.
 
 `alt-currency` is left to [#7](https://github.com/petercossey/coral/issues/7), which owns amount rendering; `customer` is omitted because the card does not branch on the signed-in state.
 
-**Linked issues:** [#5](https://github.com/petercossey/coral/issues/5), [#7](https://github.com/petercossey/coral/issues/7), [#15](https://github.com/petercossey/coral/issues/15), [#16](https://github.com/petercossey/coral/issues/16).
+**Linked issues:** [#5](https://github.com/petercossey/coral/issues/5), [#7](https://github.com/petercossey/coral/issues/7), [#15](https://github.com/petercossey/coral/issues/15), [#16](https://github.com/petercossey/coral/issues/16), [#25](https://github.com/petercossey/coral/issues/25).
 
 **Evidence**
 
@@ -252,6 +257,18 @@ Date:           2026-10-01
 Prerequisites:  Present: featured F-SIMPLE products, add-to-cart actions shown on cards.
                 Missing: featured F-OPTIONS, F-PREORDER, F-RESTRICTED; a browser session for
                 interaction and end-to-end cases.
+```
+
+The `no-js` cases were rerun for [#25](https://github.com/petercossey/coral/issues/25):
+
+```text
+Coral commit:   1f88375
+Reference:      Add to Cart URLs docs page, accessed 2026-10-02
+Environment:    Node 24.16.0, Stencil CLI 10.0.0, `stencil start --no-cache` against the development
+                store (BigCommerce sample catalog, AUD) and the live HTTPS storefront; Google Chrome
+                154 headless through playwright-core with JavaScript disabled; curl 8.18.0
+Date:           2026-10-02
+Prerequisites:  Present: featured F-SIMPLE product 111, a desktop browser User-Agent for native adds.
 ```
 
 ## Future Work

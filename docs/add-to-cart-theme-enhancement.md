@@ -52,6 +52,8 @@ Use the existing server-rendered add-to-cart URL only as the progressive-enhance
 
 BigCommerce documents `/cart.php` add-to-cart URLs as a supported storefront path for adding a product by `product_id`, `sku`, and optional `qty`, and its docs show same-origin JavaScript `GET` requests to those URLs for chained add flows. That confirms the URL can be used programmatically in a hosted storefront, but it is still a storefront URL flow rather than a structured API.
 
+The platform rejects native `/cart.php` adds from user agents it classifies as automated; [storefront-coverage.md](storefront-coverage.md#evidence) records the behavior and how tests account for it.
+
 Local testing showed the add operation can succeed while the enhanced `fetch()` still receives a `500` after following a redirect to a post-add `/cart.php?suggest=<id>` page. That means `response.ok` on the final `/cart.php` response is not a reliable signal for add success. The module should not depend on `/cart.php` response status, redirects, HTML, or opaque storefront behavior for the enhanced path.
 
 Use the REST Storefront Cart API for the enhanced mutation instead:
