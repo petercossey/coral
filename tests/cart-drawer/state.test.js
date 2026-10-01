@@ -4,6 +4,7 @@ import {
   cartDrawerOpen,
   cartDrawerReady,
   closeCartDrawer,
+  consumeCartDrawerOpener,
   openCartDrawer,
   setCartDrawerReady,
 } from '../../assets/js/state/cart.js';
@@ -12,6 +13,7 @@ describe('cart drawer state', () => {
   beforeEach(() => {
     cartDrawerOpen.value = false;
     cartDrawerReady.value = false;
+    consumeCartDrawerOpener();
   });
 
   it('tracks drawer open and ready independently', () => {
@@ -37,5 +39,15 @@ describe('cart drawer state', () => {
 
     setCartDrawerReady('');
     assert.equal(cartDrawerReady.value, false);
+  });
+
+  it('captures and consumes an explicit opener when opening', () => {
+    const opener = {
+      focus() {},
+    };
+
+    openCartDrawer({ opener });
+    assert.equal(consumeCartDrawerOpener(), opener);
+    assert.equal(consumeCartDrawerOpener(), null);
   });
 });

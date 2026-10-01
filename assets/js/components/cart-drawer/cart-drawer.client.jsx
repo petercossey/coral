@@ -3,6 +3,7 @@ import {
   cartDrawerOpen,
   cartSummary,
   closeCartDrawer,
+  consumeCartDrawerOpener,
   seedCartSummary,
   setCartDrawerReady,
 } from '../../state/cart.js';
@@ -71,7 +72,9 @@ export function CartDrawer({ cartUrl = '/cart.php' }) {
       dialog.classList.remove('is-closing');
 
       if (!dialog.open) {
-        openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        openerRef.current =
+          consumeCartDrawerOpener() ||
+          (document.activeElement instanceof HTMLElement ? document.activeElement : null);
 
         if (!prefersReducedMotion()) {
           dialog.classList.add('is-opening');
@@ -145,8 +148,14 @@ export function CartDrawer({ cartUrl = '/cart.php' }) {
     }
 
     releaseScrollLock();
-    restoreFocus(openerRef.current);
+
+    // Defer past the UA dialog focus restoration so a disconnected opener can
+    // fall back to the header cart trigger instead of leaving focus on <body>.
+    const opener = openerRef.current;
     openerRef.current = null;
+    window.setTimeout(() => {
+      restoreFocus(opener);
+    }, 0);
   }
 
   function handleDialogClick(event) {

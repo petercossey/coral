@@ -46,7 +46,8 @@ export const cartDrawerReady = signal(false);
 export const cartSummary = signal(null);
 
 export function setCartDrawerReady(ready) {}
-export function openCartDrawer() {}
+export function openCartDrawer(options) {}
+export function consumeCartDrawerOpener() {}
 export function closeCartDrawer() {}
 export function getCurrentCartId() {}
 export function rememberCartId(cartId) {}
@@ -267,7 +268,7 @@ The summary drawer is a modal dialog. Cart state remains the coordination layer;
 
 - `openCartDrawer()` sets `cartDrawerOpen`. The drawer reacts by calling `dialog.showModal()`.
 - Opening paths are the header cart link and the add-to-cart notification's "Open cart" action.
-- Before focus moves into the dialog, the drawer captures `document.activeElement` as the opener.
+- `openCartDrawer()` captures the opener synchronously (usually `document.activeElement`) before callers dismiss that control. The drawer consumes that opener when calling `showModal()`.
 - Initial focus moves to the visible close button. That control has a `:focus-visible` ring; do not remove its outline without a replacement indicator.
 - `showModal()` provides browser-managed focus containment and makes background content inert.
 
@@ -283,7 +284,7 @@ These paths all dismiss the drawer and must stay synchronized with `cartDrawerOp
 After the dialog closes:
 
 - Focus returns to the captured opener when it is still connected.
-- If the opener is gone (for example a notification action that expired), focus falls back to `[data-cart-drawer-trigger]`.
+- If the opener is gone (for example a notification action that expired), focus falls back to `[data-cart-drawer-trigger]`. Focus restoration is deferred one animation frame so it runs after the UA dialog focus handoff.
 - Temporary document scroll-lock styles are restored.
 
 ### Closed state
