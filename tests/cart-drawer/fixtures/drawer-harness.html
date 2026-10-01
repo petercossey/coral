@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cart drawer harness</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+  </head>
+  <body>
+    <a href="#main" id="before-link">Before</a>
+    <a href="/cart.php" id="cart-trigger" data-cart-drawer-trigger>Cart</a>
+    <main id="main">
+      <p>Harness page for cart drawer closed-state checks.</p>
+    </main>
+    <div id="drawer-root"></div>
+    <a href="#footer" id="after-link">After</a>
+    <footer id="footer">Footer</footer>
+    <script type="module" src="./drawer-harness.js"></script>
+  </body>
+</html>

@@ -61,7 +61,6 @@
   --coral-cart-drawer-ease: ease;
   position: fixed;
   inset: 0 0 0 auto;
-  display: flex;
   flex-direction: column;
   width: min(100%, 28rem);
   height: 100%;
@@ -75,6 +74,12 @@
   color: inherit;
   transform: translateX(100%);
   transition: transform var(--coral-cart-drawer-duration) var(--coral-cart-drawer-ease);
+}
+
+/* Keep native dialog hiding when closed. Only switch to flex while [open] so
+   exit animation can still run with is-closing before dialog.close(). */
+.coral-cart-drawer[open] {
+  display: flex;
 }
 
 .coral-cart-drawer[open]:not(.is-opening):not(.is-closing) {

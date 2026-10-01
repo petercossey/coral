@@ -286,6 +286,11 @@ After the dialog closes:
 - If the opener is gone (for example a notification action that expired), focus falls back to `[data-cart-drawer-trigger]`.
 - Temporary document scroll-lock styles are restored.
 
+### Closed state
+
+- Theme CSS must not override the UA `dialog:not([open]) { display: none }` rule. Apply `display: flex` only while `[open]` so closed drawer controls stay out of the tab order and accessibility tree.
+- Exit animation keeps `[open]` (and therefore `display: flex`) until `dialog.close()` runs after the transition or timeout fallback.
+
 ### Motion
 
 - Open and close transitions use transform/opacity on the dialog and `::backdrop`.
