@@ -37,7 +37,8 @@ Missing `optimized_checkout` translation coverage is tracked in [#7](https://git
 
 ## Validation
 
-- Inspect the generated document for a single charset, viewport, checkout head/content block, language script, and `head`/`footer` scripts.
+- Confirm the empty layout declares UTF-8 and an appropriate mobile viewport. Platform helpers such as `head.meta_tags` or `checkout.checkout_head` may emit additional meta tags; do not require exactly one charset or viewport node.
+- Confirm checkout head/content, the `optimized_checkout` language script, and `head`/`footer` scripts each appear once.
 - Open hosted checkout at mobile and desktop widths with a populated cart; confirm the visually hidden heading, keyboard focus into checkout controls, and that form controls are not flattened by theme base styles.
 - Do not place a paid order as part of shell validation.
 - `npm run build` and `stencil bundle` still apply as theme packaging checks.
