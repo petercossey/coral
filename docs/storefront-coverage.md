@@ -115,6 +115,8 @@ Steps and expected/actual results live in the case table, written so another con
 
 Records never contain credentials, API tokens, `.stencil` or `secrets.stencil.json` values, session cookies, cart IDs, customer names, emails, addresses, or order numbers. Refer to accounts and orders by fixture ID, and redact identifiers from pasted output.
 
+Cases that depend on the shopper session, such as a cart, run `stencil start --no-cache`. By default `stencil start` caches page responses for 15 seconds keyed on URL and request headers but not cookies, so a render can come from an earlier request or another session.
+
 Commands that start `stencil start` stop it once the evidence is captured.
 
 ## Record Template

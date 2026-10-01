@@ -2,8 +2,191 @@
 cart: true
 ---
 {{#partial "page"}}
-<div>
-  <p>cart page</p>
-</div>
+    <section class="flex flex-col gap-6" aria-labelledby="cart-heading">
+        <div class="flex flex-col gap-1">
+            <h1 class="text-3xl font-semibold" id="cart-heading">{{lang 'cart.heading'}}</h1>
+            {{#if cart.items.length}}
+                <p class="text-sm">{{lang 'cart.item_count' quantity=cart.quantity}}</p>
+            {{/if}}
+        </div>
+
+        {{!-- One-shot platform messages, such as a rejected add from the /cart.php
+              fallback. `message` is platform HTML; Cornerstone renders it unescaped. --}}
+        {{#if cart.status_messages}}
+            <div class="flex flex-col gap-2" role="status">
+                {{#each cart.status_messages}}
+                    <p class="border border-slate-300 bg-white p-4 text-sm">{{{message}}}</p>
+                {{/each}}
+            </div>
+        {{/if}}
+
+        {{#if cart.items.length}}
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+                <ul class="flex flex-col border border-slate-300 bg-white" aria-label="{{lang 'cart.items_label'}}">
+                    {{#each cart.items}}
+                        <li class="grid grid-cols-[4rem_minmax(0,1fr)] gap-4 border-b border-slate-300 p-4 last:border-b-0 sm:grid-cols-[6rem_minmax(0,1fr)]">
+                            {{#if image}}
+                                <img
+                                    class="aspect-square w-full object-cover"
+                                    src="{{getImageSrcset image 1x='160w'}}"
+                                    srcset="{{getImageSrcset image 1x='160w' 2x='320w'}}"
+                                    alt=""
+                                    loading="lazy">
+                            {{else}}
+                                <div class="aspect-square w-full border border-slate-300" aria-hidden="true"></div>
+                            {{/if}}
+
+                            <div class="flex flex-col gap-3">
+                                <div class="flex flex-col gap-1">
+                                    {{#if brand.name}}
+                                        <p class="text-sm">{{brand.name}}</p>
+                                    {{/if}}
+                                    <h2 class="text-base font-semibold leading-snug">
+                                        {{#if url}}
+                                            <a href="{{url}}">{{name}}</a>
+                                        {{else}}
+                                            {{name}}
+                                        {{/if}}
+                                    </h2>
+                                    {{#if options}}
+                                        <dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 text-sm">
+                                            {{#each options}}
+                                                <dt>{{name}}:</dt>
+                                                <dd>{{value}}</dd>
+                                            {{/each}}
+                                        </dl>
+                                    {{/if}}
+                                </div>
+
+                                <dl class="grid grid-cols-3 gap-2 text-sm">
+                                    <div>
+                                        <dt>{{lang 'cart.item.price'}}</dt>
+                                        <dd class="font-semibold">
+                                            {{#or ../customer (unless ../settings.hide_price_from_guests) (if type '==' 'GiftCertificate')}}
+                                                {{#if price_discounted}}{{price_discounted.formatted}}{{else}}{{price.formatted}}{{/if}}
+                                            {{else}}
+                                                {{lang 'cart.login_for_pricing'}}
+                                            {{/or}}
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>{{lang 'cart.item.quantity'}}</dt>
+                                        <dd class="font-semibold">{{quantity}}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>{{lang 'cart.item.total'}}</dt>
+                                        <dd class="font-semibold">
+                                            {{#or ../customer (unless ../settings.hide_price_from_guests) (if type '==' 'GiftCertificate')}}
+                                                {{#if total_discounted}}{{total_discounted.formatted}}{{else}}{{total.formatted}}{{/if}}
+                                            {{else}}
+                                                {{lang 'cart.login_for_pricing'}}
+                                            {{/or}}
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </li>
+                    {{/each}}
+                </ul>
+
+                <div class="flex flex-col gap-4 border border-slate-300 bg-white p-4">
+                    <h2 class="text-lg font-semibold">{{lang 'cart.totals.heading'}}</h2>
+
+                    {{#or customer (unless settings.hide_price_from_guests)}}
+                        {{!-- Render each amount the server supplies, in Cornerstone's order, so
+                              the rows reconcile with the grand total. No amount is computed here. --}}
+                        <dl class="flex flex-col gap-2 text-sm">
+                            <div class="flex justify-between gap-4">
+                                <dt>{{lang 'cart.totals.subtotal'}}</dt>
+                                <dd>{{cart.sub_total.formatted}}</dd>
+                            </div>
+                            {{#if cart.multi_coupon_ui_enabled}}
+                                {{#if cart.display_discount_total.value}}
+                                    <div class="flex justify-between gap-4">
+                                        <dt>{{lang 'cart.totals.discounts'}}</dt>
+                                        <dd>{{cart.display_discount_total.formatted}}</dd>
+                                    </div>
+                                {{/if}}
+                            {{else}}
+                                {{#if cart.discount}}
+                                    <div class="flex justify-between gap-4">
+                                        <dt>{{lang 'cart.totals.discounts'}}</dt>
+                                        <dd>{{cart.discount.formatted}}</dd>
+                                    </div>
+                                {{/if}}
+                                {{#each cart.coupons}}
+                                    <div class="flex justify-between gap-4">
+                                        <dt>{{lang 'cart.totals.coupon' code=code}}</dt>
+                                        <dd>{{discount.formatted}}</dd>
+                                    </div>
+                                {{/each}}
+                            {{/if}}
+                            {{#if cart.gift_wrapping_cost.value}}
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{lang 'cart.totals.gift_wrapping'}}</dt>
+                                    <dd>{{cart.gift_wrapping_cost.formatted}}</dd>
+                                </div>
+                            {{/if}}
+                            {{#each cart.fees}}
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{display_name}}</dt>
+                                    <dd>{{cost.formatted}}</dd>
+                                </div>
+                            {{/each}}
+                            {{#if cart.shipping_handling.shipping_cost}}
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{lang 'cart.totals.shipping'}}</dt>
+                                    <dd>{{#if cart.shipping_handling.shipping_cost_discounted}}{{cart.shipping_handling.shipping_cost_discounted.formatted}}{{else}}{{cart.shipping_handling.shipping_cost.formatted}}{{/if}}</dd>
+                                </div>
+                            {{/if}}
+                            {{#each cart.taxes}}
+                                {{#unless included}}
+                                    <div class="flex justify-between gap-4">
+                                        <dt>{{name}}</dt>
+                                        <dd>{{cost.formatted}}</dd>
+                                    </div>
+                                {{/unless}}
+                            {{/each}}
+                            {{#each cart.gift_certificates}}
+                                <div class="flex justify-between gap-4">
+                                    <dt>{{lang 'cart.totals.gift_certificate' code=code}}</dt>
+                                    <dd>{{used.formatted}}</dd>
+                                </div>
+                            {{/each}}
+                            <div class="flex justify-between gap-4 border-t border-slate-300 pt-2 text-base font-semibold">
+                                <dt>{{lang 'cart.totals.grand_total'}}</dt>
+                                <dd>{{cart.grand_total.formatted}}</dd>
+                            </div>
+                            {{#each cart.taxes}}
+                                {{#if included}}
+                                    <div class="flex justify-between gap-4">
+                                        <dt>{{lang 'cart.totals.tax_included' name=name}}</dt>
+                                        <dd>{{cost.formatted}}</dd>
+                                    </div>
+                                {{/if}}
+                            {{/each}}
+                        </dl>
+
+                        {{#if cart.show_primary_checkout_button}}
+                            <a class="inline-flex items-center justify-center bg-slate-950 px-4 py-3 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950" href="{{urls.checkout.single_address}}">
+                                {{lang 'cart.checkout'}}
+                            </a>
+                        {{/if}}
+                    {{else}}
+                        <a class="inline-flex items-center justify-center border border-slate-950 px-4 py-3 text-sm font-semibold" href="{{urls.auth.login}}">
+                            {{lang 'cart.login_to_checkout'}}
+                        </a>
+                    {{/or}}
+
+                    <a class="text-center text-sm underline" href="{{urls.home}}">{{lang 'cart.continue_shopping'}}</a>
+                </div>
+            </div>
+        {{else}}
+            <div class="flex flex-col items-start gap-4 border border-slate-300 bg-white p-5">
+                <p class="text-sm">{{lang 'cart.empty'}}</p>
+                <a class="inline-flex items-center justify-center border border-slate-950 px-4 py-2 text-sm font-medium" href="{{urls.home}}">{{lang 'cart.continue_shopping'}}</a>
+            </div>
+        {{/if}}
+    </section>
 {{/partial}}
 {{> layout/base}}
