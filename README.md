@@ -75,7 +75,7 @@ docs/
 
 The storefront references built assets with `{{cdn 'assets/dist/style.css'}}` and `{{cdn 'assets/dist/app.js'}}`. Do not use Stencil's `{{stylesheet}}` helper for Coral's main CSS.
 
-Page templates define a `page` block and then render either `{{> layout/base}}` for normal storefront chrome or `{{> layout/empty}}` for chrome-free system pages such as checkout. Shared structural regions such as the site header, body wrapper, and footer live in `templates/common/`; `templates/components/` is reserved for reusable feature-specific Handlebars partials. The client component rules in [docs/javascript.md](docs/javascript.md) cover when a component mount partial is justified.
+Page templates define a `page` block and then render either `{{> layout/base}}` for normal storefront chrome or `{{> layout/empty}}` for chrome-free system pages such as checkout. The empty layout declares charset and viewport and does not load the theme stylesheet; see [docs/checkout-shell.md](docs/checkout-shell.md). Shared structural regions such as the site header, body wrapper, and footer live in `templates/common/`; `templates/components/` is reserved for reusable feature-specific Handlebars partials. The client component rules in [docs/javascript.md](docs/javascript.md) cover when a component mount partial is justified.
 
 ## Commands
 
@@ -96,6 +96,7 @@ Guides and conventions:
 - [docs/stencil-primer.md](docs/stencil-primer.md): Stencil orientation for developers new to BigCommerce.
 - [docs/building-a-feature.md](docs/building-a-feature.md): task-oriented guide to adding a feature.
 - [docs/javascript.md](docs/javascript.md): stable JavaScript conventions for components, theme modules, state, and events.
+- [docs/checkout-shell.md](docs/checkout-shell.md): chrome-free checkout document shell conventions.
 - [docs/git-branching.md](docs/git-branching.md): lightweight human branching guide.
 
 Feature design notes, describing implemented behavior with remaining work at the end of each doc:

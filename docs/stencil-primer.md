@@ -40,9 +40,10 @@ To inspect the context for any page during `stencil start`, append `?debug=conte
 | Category listing | `category` |
 | Search results | `search` |
 | Cart | `cart` |
+| Checkout | `checkout` |
 | Web page | `page` |
 
-Note the homepage is `default`, not `home`. The full list is in the [page_type reference](https://developer.bigcommerce.com/docs/storefront/stencil/themes/context/object-reference/page-type).
+Note the homepage is `default`, not `home`. Checkout uses the chrome-free empty layout; see [checkout-shell.md](checkout-shell.md). The full list is in the [page_type reference](https://developer.bigcommerce.com/docs/storefront/stencil/themes/context/object-reference/page-type).
 
 ## Server Data In Client Code
 

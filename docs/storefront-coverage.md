@@ -173,7 +173,7 @@ Records link these foundations instead of restating their scope:
 
 - **Cart drawer accessibility**: focus, Escape, focus restoration, and reduced motion are specified by [#5](https://github.com/petercossey/coral/issues/5) and [cart-drawer.md](cart-drawer.md). Drawer-related keyboard cases cite #5 for expected behavior.
 - **Localization and currency**: copy and amount conventions are owned by [#7](https://github.com/petercossey/coral/issues/7). Hardcoded copy or `$0.00` fallbacks are recorded as gaps linked to #7.
-- **Checkout shell**: the hosted checkout document shell is owned by [#8](https://github.com/petercossey/coral/issues/8). Checkout records cover the handoff and link #8 for the shell.
+- **Checkout shell**: the hosted checkout document shell is specified in [checkout-shell.md](checkout-shell.md). Checkout records cover the handoff and link that doc for the shell.
 - **B2B workflows**: coverage, roles, and prerequisites are owned by [#10](https://github.com/petercossey/coral/issues/10) and documented in [b2b.md](b2b.md).
 
 ## Contributing Records

@@ -4,7 +4,6 @@ cart: true
 {{#partial "head"}}
 
 {{{ checkout.checkout_head }}}
-<link rel="stylesheet" href="{{cdn 'assets/dist/style.css'}}">
 
 <script type="text/javascript" nonce="{{nonce}}">
     window.language = {{{langJson 'optimized_checkout'}}};
@@ -17,7 +16,7 @@ cart: true
 {{#partial "page"}}
 <header class="checkoutHeader optimizedCheckout-header">
     <div class="checkoutHeader-content">
-        <h1 class="is-srOnly">{{lang 'checkout.title'}}</h1>
+        <h1 class="sr-only">{{lang 'checkout.title'}}</h1>
         <h2 class="checkoutHeader-heading">
             <a class="checkoutHeader-link" href="{{urls.home}}">
                 {{#if checkout.header_image}}
