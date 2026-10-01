@@ -1,8 +1,10 @@
 import { signal } from '@preact/signals';
 
 export const cartDrawerOpen = signal(false);
+export const cartDrawerReady = signal(false);
 export const cartSummary = signal(null);
 const currentCartId = signal(null);
+let cartDrawerOpener = null;
 
 function normalizeCartId(value) {
   if (typeof value !== 'string') {
@@ -117,8 +119,36 @@ function normalizeCartSummary(summary = {}, metadata = {}) {
   };
 }
 
-export function openCartDrawer() {
+export function setCartDrawerReady(ready) {
+  cartDrawerReady.value = Boolean(ready);
+}
+
+function captureCartDrawerOpener(opener) {
+  if (opener && typeof opener.focus === 'function') {
+    return opener;
+  }
+
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  return document.activeElement instanceof HTMLElement ? document.activeElement : null;
+}
+
+export function openCartDrawer(options = {}) {
+  // Capture before callers dismiss the triggering control (for example a
+  // notification action that removes itself in the same click turn).
+  if (!cartDrawerOpen.value) {
+    cartDrawerOpener = captureCartDrawerOpener(options.opener);
+  }
+
   cartDrawerOpen.value = true;
+}
+
+export function consumeCartDrawerOpener() {
+  const opener = cartDrawerOpener;
+  cartDrawerOpener = null;
+  return opener;
 }
 
 export function closeCartDrawer() {
