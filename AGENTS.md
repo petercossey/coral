@@ -93,3 +93,18 @@ Do not leave long-running `stencil start` sessions active after validation unles
 - Storefront API work should be checked against the BigCommerce developer docs linked above before implementation.
 - No-JavaScript fallbacks are optional for client components; do not replace whole pages with Preact.
 - Theme modules should preserve server-rendered fallbacks where practical.
+
+## Cursor Cloud specific instructions
+
+- Stencil CLI 10 requires Node.js 24. Cloud Agent shells resolve `node` to `/exec-daemon/node` (Node 22), which Stencil CLI rejects. Before `npm`, `stencil`, or Vite, select Node 24 and put it first on `PATH`:
+
+```sh
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+nvm use 24
+export PATH="$NVM_BIN:$PATH"
+```
+
+- `.cursor/cloud-install.sh` installs Node 24, theme dependencies, and Stencil CLI, then runs `npm run build`. `.cursor/cloud-start.sh` starts the storefront.
+- Store credentials stay in gitignored `config.stencil.json` and `secrets.stencil.json`. Do not commit them. On a prepared environment, copies live in `~/.config/coral/` and `cloud-start.sh` restores them into the theme directory after checkout.
+- `stencil start` listens on port 3000. `npm run build` and `stencil bundle` do not need the store. `stencil bundle` needs Node 24 on `PATH`.
