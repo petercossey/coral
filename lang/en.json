@@ -1,4 +1,30 @@
 {
+  "cart": {
+    "heading": "Your cart",
+    "item_count": "{quantity, plural, one {# item} other {# items}}",
+    "items_label": "Cart items",
+    "empty": "Your cart is empty.",
+    "continue_shopping": "Continue shopping",
+    "checkout": "Check out",
+    "login_for_pricing": "Log in for pricing",
+    "login_to_checkout": "Log in to check out",
+    "item": {
+      "price": "Price",
+      "quantity": "Quantity",
+      "total": "Total"
+    },
+    "totals": {
+      "heading": "Order summary",
+      "subtotal": "Subtotal",
+      "discounts": "Discounts",
+      "coupon": "Coupon ({code})",
+      "gift_wrapping": "Gift wrapping",
+      "shipping": "Shipping",
+      "gift_certificate": "Gift certificate ({code})",
+      "grand_total": "Grand total",
+      "tax_included": "{name} (included in total)"
+    }
+  },
   "category": {
     "subcategories": "Subcategories",
     "no_products": "There are no products in this category.",

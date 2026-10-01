@@ -101,6 +101,7 @@ Guides and conventions:
 Feature design notes, describing implemented behavior with remaining work at the end of each doc:
 
 - [docs/cart-state-and-ui-updates.md](docs/cart-state-and-ui-updates.md): cart state boundaries and update patterns.
+- [docs/cart-page.md](docs/cart-page.md): server-rendered cart page, its context fields, and limitations.
 - [docs/cart-drawer.md](docs/cart-drawer.md): cart drawer design and roadmap.
 - [docs/product-listings.md](docs/product-listings.md): shared product card and category listing.
 - [docs/add-to-cart-theme-enhancement.md](docs/add-to-cart-theme-enhancement.md): product-card add-to-cart enhancement design.
