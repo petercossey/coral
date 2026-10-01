@@ -81,6 +81,7 @@ Page templates define a `page` block and then render either `{{> layout/base}}` 
 
 - `npm run build` builds CSS and JavaScript into `assets/dist/`.
 - `npm run dev` watches and rebuilds assets; this is run by `stencil start`.
+- `npm test` runs Node's built-in test runner under `tests/`. Cart drawer browser checks use Playwright against a local Chrome/Chromium binary. Automatic discovery currently covers common Linux paths (`google-chrome`, `google-chrome-stable`, `chromium`, `chromium-browser`). On macOS, Windows, or a custom install, set `CHROME_PATH` to the browser executable before running tests.
 - `stencil start` runs the local storefront.
 - `stencil bundle` validates and packages the theme.
 

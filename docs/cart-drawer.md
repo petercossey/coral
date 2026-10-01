@@ -340,6 +340,7 @@ Do not add a future event until at least one non-state consumer needs it.
 - Seed props on the drawer mount in `templates/layout/base.html`.
 - Shared `cartSummary` and `seedCartSummary()` in `assets/js/state/cart.js`.
 - Native `<dialog>` drawer with `showModal()`, Escape/backdrop/close dismissal, focus restore, scroll lock, and reduced-motion-aware transitions.
+- Browser regression checks under `tests/cart-drawer/` assert closed controls stay out of the tab order and accessibility tree. Those checks need a local Chrome/Chromium binary; see the `npm test` note in `README.md`.
 - `cartDrawerReady` gates header click interception until the Preact leaf has mounted.
 - Drawer render from seeded quantity/subtotal state.
 - Header count/subtotal updates from the same cart state.
